@@ -1,0 +1,2203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokémon Quiz & Catch - Version 1.0.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background: linear-gradient(180deg, #38bdf8 0%, #7dd3fc 52%, #e0f2fe 100%);
+      color: #0f172a;
+      position: relative;
+    }
+
+    .sky-layer { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .sun-glow {
+      position: absolute; top: -65px; right: -65px; width: 220px; height: 220px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(254,240,138,0.95) 0%, rgba(253,224,71,0.45) 45%, rgba(253,224,71,0) 72%);
+      animation: sunPulse 6s ease-in-out infinite;
+    }
+    @keyframes sunPulse { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.08); opacity: 1; } }
+
+    .cloud {
+      position: absolute; background: rgba(255,255,255,0.88); border-radius: 999px;
+      filter: drop-shadow(0 6px 12px rgba(14,116,144,0.12));
+    }
+    .cloud::before, .cloud::after { content: ""; position: absolute; background: rgba(255,255,255,0.92); border-radius: 50%; }
+    .cloud-1 { width: 130px; height: 42px; top: 9%; left: -150px; animation: driftCloud 34s linear infinite; }
+    .cloud-1::before { width: 54px; height: 54px; top: -24px; left: 18px; }
+    .cloud-1::after { width: 64px; height: 64px; top: -30px; left: 52px; }
+
+    .cloud-2 { width: 170px; height: 50px; top: 22%; left: -200px; transform: scale(0.85); animation: driftCloud 46s linear infinite; animation-delay: -14s; }
+    .cloud-2::before { width: 68px; height: 68px; top: -30px; left: 24px; }
+    .cloud-2::after { width: 76px; height: 76px; top: -36px; left: 66px; }
+
+    .cloud-3 { width: 145px; height: 44px; top: 68%; left: -170px; transform: scale(0.92); animation: driftCloud 40s linear infinite; animation-delay: -24s; }
+    .cloud-3::before { width: 58px; height: 58px; top: -26px; left: 20px; }
+    .cloud-3::after { width: 66px; height: 66px; top: -32px; left: 58px; }
+
+    .cloud-4 { width: 115px; height: 36px; top: 84%; left: -140px; transform: scale(0.75); animation: driftCloud 52s linear infinite; animation-delay: -8s; }
+    .cloud-4::before { width: 46px; height: 46px; top: -20px; left: 16px; }
+    .cloud-4::after { width: 52px; height: 52px; top: -24px; left: 46px; }
+
+    @keyframes driftCloud {
+      0% { transform: translateX(-180px); }
+      100% { transform: translateX(calc(100vw + 240px)); }
+    }
+
+    .app-wrapper {
+      position: relative; z-index: 1; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center; padding: 18px 14px 32px;
+    }
+    .screen { display: none; width: 100%; max-width: 460px; animation: fadeIn 0.25s ease; }
+    .screen.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .title-box { text-align: center; margin-bottom: 12px; }
+    .title-box h1 {
+      font-family: 'Fredoka', sans-serif; font-size: clamp(2.05rem, 8vw, 2.75rem); line-height: 0.98;
+      color: #ffffff; letter-spacing: 0.5px;
+      -webkit-text-stroke: 2.2px #1e293b;
+      text-shadow: 0 5px 0 #1e293b, 0 10px 20px rgba(15,23,42,0.22);
+    }
+    .title-box h1 span.accent-yellow { color: #fde047; }
+    .title-box h1 span.accent-red { color: #ff6b6b; }
+    .version-tag {
+      display: inline-block; margin-top: 6px; background: rgba(255,255,255,0.9); color: #0f172a;
+      border: 2px solid #1e293b; border-radius: 999px; padding: 3px 12px; font-size: 0.74rem;
+      font-weight: 800; box-shadow: 0 3px 0 #1e293b;
+    }
+
+    .splash-banner {
+      margin: 0 auto 14px; background: #fffbeb; border: 2.5px solid #1e293b; border-radius: 16px;
+      padding: 8px 14px; text-align: center; box-shadow: 0 4px 0 #1e293b; cursor: pointer;
+    }
+    .splash-text { font-size: 0.82rem; font-weight: 800; color: #92400e; display: inline-block; animation: splashBob 2.2s ease-in-out infinite; }
+    @keyframes splashBob { 0%, 100% { transform: scale(1) rotate(-0.5deg); } 50% { transform: scale(1.03) rotate(0.6deg); } }
+
+    .panel-card {
+      background: rgba(255,255,255,0.94); backdrop-filter: blur(8px);
+      border: 3px solid #1e293b; border-radius: 24px; padding: 18px 16px;
+      box-shadow: 0 8px 0 #1e293b, 0 16px 28px rgba(15,23,42,0.2);
+    }
+
+    .firebase-status-bar {
+      font-size: 0.74rem; font-weight: 800; padding: 7px 10px; border-radius: 12px;
+      border: 2px solid #1e293b; margin-bottom: 12px; background: #f1f5f9; color: #334155;
+    }
+    .firebase-status-bar.ok { background: #dcfce7; color: #166534; }
+    .firebase-status-bar.warn { background: #fef3c7; color: #92400e; }
+
+    .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .auth-tab-btn {
+      border: 2.5px solid #1e293b; border-radius: 13px; padding: 9px 10px;
+      font-family: 'Fredoka', sans-serif; font-size: 0.92rem; background: #e2e8f0;
+      color: #1e293b; cursor: pointer; box-shadow: 0 3px 0 #1e293b;
+    }
+    .auth-tab-btn.active { background: #fde047; transform: translateY(-1px); }
+    .auth-switch-link { margin-top: 10px; font-size: 0.78rem; color: #475569; font-weight: 700; }
+    .auth-switch-link span { color: #0284c7; text-decoration: underline; cursor: pointer; }
+
+    .input-group { margin-bottom: 12px; text-align: left; }
+    .input-group label { display: block; font-size: 0.8rem; font-weight: 800; margin-bottom: 5px; color: #1e293b; }
+    .login-input {
+      width: 100%; border: 2.5px solid #1e293b; border-radius: 14px; padding: 10px 13px;
+      font-size: 0.92rem; font-weight: 700; background: #f8fafc; outline: none;
+    }
+    .login-input:focus { background: #ffffff; border-color: #0284c7; }
+
+    .profile-section { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .profile-left { display: flex; flex-direction: column; gap: 6px; }
+    .btn-mini {
+      border: 2px solid #1e293b; border-radius: 11px; padding: 5px 9px; font-size: 0.72rem;
+      font-weight: 800; cursor: pointer; box-shadow: 0 3px 0 #1e293b; transition: transform 0.08s ease;
+    }
+    .btn-mini:active { transform: translateY(2px); box-shadow: 0 1px 0 #1e293b; }
+    .btn-logout { background: #fde047; color: #1e293b; }
+    .btn-delete { background: #fecaca; color: #991b1b; }
+
+    .avatar-circle {
+      width: 82px; height: 82px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #ffffff, #bae6fd 70%, #7dd3fc 100%);
+      border: 3px solid #1e293b; box-shadow: 0 5px 0 #1e293b;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      cursor: pointer; margin: 0 auto; transition: transform 0.12s ease;
+    }
+    .avatar-circle:hover { transform: scale(1.04); }
+    .avatar-circle img { width: 70px; height: 70px; object-fit: contain; }
+
+    .profile-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .user-badge {
+      background: #ffffff; border: 2.5px solid #1e293b; border-radius: 14px;
+      padding: 6px 10px; box-shadow: 0 4px 0 #1e293b; text-align: right; max-width: 158px; cursor: pointer;
+    }
+    .user-badge .u-name { font-weight: 800; font-size: 0.84rem; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-badge .u-id { font-size: 0.65rem; font-weight: 700; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .right-tools-row { display: flex; align-items: center; gap: 6px; }
+    .btn-leaderboard-box {
+      background: #fef08a; border: 2.5px solid #1e293b; border-radius: 12px;
+      padding: 5px 9px; font-size: 0.72rem; font-weight: 800; color: #1e293b;
+      cursor: pointer; box-shadow: 0 3px 0 #1e293b;
+    }
+    .btn-audio-box {
+      width: 36px; height: 34px; border-radius: 12px; border: 2.5px solid #1e293b;
+      background: #86efac; box-shadow: 0 3px 0 #1e293b; font-size: 1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .btn-audio-box.muted { background: #e2e8f0; }
+
+    .menu-stack { display: flex; flex-direction: column; gap: 11px; }
+    .menu-btn {
+      width: 100%; border: 3px solid #1e293b; border-radius: 18px; padding: 13px 16px;
+      font-family: 'Fredoka', sans-serif; font-size: 1.22rem; letter-spacing: 0.4px;
+      color: #0f172a; cursor: pointer; box-shadow: 0 5px 0 #1e293b;
+      transition: transform 0.09s ease, box-shadow 0.09s ease;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .menu-btn:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #1e293b; }
+    .menu-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #1e293b; }
+    .menu-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+    .btn-quiz { background: linear-gradient(180deg, #fde047 0%, #facc15 100%); }
+    .btn-pvp { background: linear-gradient(180deg, #fca5a5 0%, #f87171 100%); }
+    .btn-pokedex { background: linear-gradient(180deg, #93c5fd 0%, #60a5fa 100%); }
+    .btn-inventory { background: linear-gradient(180deg, #86efac 0%, #4ade80 100%); }
+    .btn-fuse { background: linear-gradient(180deg, #d8b4fe 0%, #c084fc 100%); flex-direction: column; line-height: 1.1; padding: 10px 16px; }
+    .btn-fuse .sub-soon { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.72rem; font-weight: 800; color: #3b0764; }
+    .btn-create { background: linear-gradient(180deg, #67e8f9 0%, #22d3ee 100%); }
+
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px; }
+    .panel-header h2 { font-family: 'Fredoka', sans-serif; font-size: 1.32rem; color: #0f172a; }
+    .btn-back {
+      border: 2.5px solid #1e293b; border-radius: 12px; background: #f1f5f9;
+      padding: 6px 11px; font-size: 0.78rem; font-weight: 800; cursor: pointer; box-shadow: 0 3px 0 #1e293b;
+    }
+
+    .music-pill {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 800;
+      padding: 4px 10px; border-radius: 999px; border: 2px solid #1e293b;
+      background: #e0f2fe; color: #0369a1; margin-bottom: 10px;
+    }
+    .music-pill.quiz { background: #fef9c3; color: #854d0e; }
+    .music-pill.battle { background: #fee2e2; color: #991b1b; }
+
+    .hud-strip {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px;
+    }
+    .hud-box {
+      background: #f8fafc; border: 2px solid #1e293b; border-radius: 12px;
+      padding: 6px 6px; text-align: center; box-shadow: 0 2px 0 #1e293b;
+    }
+    .hud-lbl { font-size: 0.62rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
+    .hud-val { font-family: 'Fredoka', sans-serif; font-size: 0.92rem; color: #0f172a; }
+
+    .timer-track {
+      width: 100%; height: 10px; background: #e2e8f0; border: 2px solid #1e293b;
+      border-radius: 999px; overflow: hidden; margin-bottom: 10px;
+    }
+    .timer-fill {
+      height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+      transition: width 0.1s linear;
+    }
+
+    .quiz-poke-box {
+      text-align: center; background: linear-gradient(180deg, #e0f2fe, #f8fafc);
+      border: 2.5px solid #1e293b; border-radius: 18px; padding: 12px; margin-bottom: 10px;
+    }
+    .quiz-poke-box img { width: 96px; height: 96px; object-fit: contain; margin: 4px auto; display: block; }
+    .quiz-poke-box img.silhouette { filter: brightness(0) saturate(100%); }
+
+    .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .opt-btn {
+      border: 2.5px solid #1e293b; border-radius: 14px; padding: 10px 9px;
+      background: #ffffff; font-weight: 800; font-size: 0.8rem; cursor: pointer;
+      box-shadow: 0 3px 0 #1e293b; text-align: left; line-height: 1.25;
+    }
+    .opt-btn.correct { background: #86efac; }
+    .opt-btn.wrong { background: #fca5a5; }
+    .opt-btn.selected-move { background: #fde047; }
+
+    .party-mini-bar {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px;
+    }
+    .party-mini-slot {
+      background: #f1f5f9; border: 2px solid #1e293b; border-radius: 11px;
+      padding: 5px; text-align: center; font-size: 0.68rem; font-weight: 800;
+    }
+    .party-mini-slot img { width: 34px; height: 34px; object-fit: contain; display: block; margin: 0 auto 2px; }
+
+    .qte-backdrop {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72); z-index: 60;
+      display: none; align-items: center; justify-content: center; padding: 16px;
+    }
+    .qte-backdrop.show { display: flex; }
+    .qte-box {
+      width: 100%; max-width: 420px; background: #ffffff; border: 3px solid #1e293b;
+      border-radius: 22px; padding: 16px; box-shadow: 0 8px 0 #1e293b; text-align: center;
+    }
+    .qte-box.legendary-mode { background: linear-gradient(180deg, #fef9c3, #ffffff); border-color: #ca8a04; }
+    .qte-banner { font-family: 'Fredoka', sans-serif; font-size: 0.92rem; color: #b45309; margin-bottom: 6px; }
+    .qte-sprite { width: 96px; height: 96px; object-fit: contain; margin: 4px auto; display: block; }
+    .qte-bar {
+      position: relative; width: 100%; height: 28px; background: #e2e8f0;
+      border: 2.5px solid #1e293b; border-radius: 999px; overflow: hidden; margin: 10px 0;
+    }
+    .qte-zone {
+      position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%);
+      background: rgba(34, 197, 94, 0.55); border-left: 2px solid #15803d; border-right: 2px solid #15803d;
+    }
+    .qte-cursor {
+      position: absolute; top: -2px; bottom: -2px; width: 8px; left: 0%;
+      background: #ef4444; border: 1.5px solid #1e293b; border-radius: 4px;
+    }
+    .ball-selector-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+    .ball-choice-btn {
+      border: 2px solid #1e293b; border-radius: 11px; padding: 6px 4px;
+      background: #f8fafc; font-size: 0.68rem; font-weight: 800; cursor: pointer;
+    }
+    .ball-choice-btn.active { background: #fde047; box-shadow: 0 2px 0 #1e293b; }
+
+    .dex-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .dex-tab-btn {
+      border: 2.5px solid #1e293b; border-radius: 12px; padding: 7px 10px;
+      font-weight: 800; font-size: 0.8rem; background: #e2e8f0; cursor: pointer;
+    }
+    .dex-tab-btn.active { background: #fde047; }
+
+    .pokedex-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+      max-height: 330px; overflow-y: auto; padding-right: 3px;
+    }
+    .dex-card {
+      background: #f8fafc; border: 2px solid #1e293b; border-radius: 14px;
+      padding: 8px 6px; text-align: center; box-shadow: 0 3px 0 #1e293b;
+    }
+    .dex-card img { width: 58px; height: 58px; object-fit: contain; margin: 2px auto; display: block; }
+    .dex-card .dex-num { font-size: 0.66rem; font-weight: 800; color: #64748b; }
+    .dex-card .dex-name { font-size: 0.74rem; font-weight: 800; color: #0f172a; margin-top: 2px; }
+    .dex-card.locked img { filter: brightness(0) opacity(0.35); }
+    .dex-card.locked .dex-name { color: #94a3b8; }
+
+    .inv-section-title { font-size: 0.82rem; font-weight: 800; margin: 10px 0 6px; color: #1e293b; }
+    .items-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+    .item-box {
+      background: #f8fafc; border: 2px solid #1e293b; border-radius: 13px;
+      padding: 7px 4px; text-align: center; box-shadow: 0 3px 0 #1e293b;
+    }
+    .item-box .item-icon { font-size: 1.15rem; }
+    .item-box .item-name { font-size: 0.66rem; font-weight: 800; color: #334155; }
+    .item-box .item-qty { font-family: 'Fredoka', sans-serif; font-size: 0.88rem; color: #0f172a; }
+
+    .team-manage-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+    .team-slot-card {
+      background: #fffbeb; border: 2px solid #1e293b; border-radius: 13px;
+      padding: 7px 6px; text-align: center; font-size: 0.7rem; font-weight: 800;
+    }
+    .team-slot-card img { width: 48px; height: 48px; object-fit: contain; margin: 2px auto; display: block; }
+    .btn-tiny-act {
+      margin-top: 4px; width: 100%; border: 1.5px solid #1e293b; border-radius: 8px;
+      padding: 3px 4px; font-size: 0.65rem; font-weight: 800; cursor: pointer; background: #fde047;
+    }
+
+    .lb-list { display: flex; flex-direction: column; gap: 7px; max-height: 320px; overflow-y: auto; }
+    .lb-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      background: #f8fafc; border: 2px solid #1e293b; border-radius: 13px;
+      padding: 8px 11px; font-size: 0.8rem; font-weight: 800;
+    }
+    .lb-row.me { background: #fef9c3; }
+    .lb-rank { font-family: 'Fredoka', sans-serif; font-size: 0.95rem; min-width: 28px; }
+    .lb-pts { color: #0369a1; font-weight: 800; white-space: nowrap; }
+
+    .battle-arena {
+      display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px;
+      background: linear-gradient(180deg, #bae6fd, #f0fdf4); border: 2.5px solid #1e293b;
+      border-radius: 16px; padding: 10px; margin-bottom: 10px; text-align: center;
+    }
+    .fighter img { width: 74px; height: 74px; object-fit: contain; margin: 4px auto; display: block; }
+    .hp-bar-wrap { width: 100%; height: 9px; background: #e2e8f0; border: 1.5px solid #1e293b; border-radius: 999px; overflow: hidden; margin-top: 3px; }
+    .hp-fill { height: 100%; background: #22c55e; transition: width 0.25s ease; }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.55); z-index: 50;
+      display: none; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal-box {
+      width: 100%; max-width: 360px; background: #ffffff; border: 3px solid #1e293b;
+      border-radius: 20px; padding: 18px; box-shadow: 0 7px 0 #1e293b; text-align: center;
+    }
+    .modal-actions { display: flex; gap: 10px; margin-top: 14px; justify-content: center; }
+    .modal-actions button {
+      border: 2.5px solid #1e293b; border-radius: 12px; padding: 8px 14px;
+      font-weight: 800; cursor: pointer; box-shadow: 0 3px 0 #1e293b;
+    }
+
+    .toast {
+      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: #0f172a; color: #ffffff; padding: 9px 16px; border-radius: 999px;
+      font-size: 0.78rem; font-weight: 700; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease; z-index: 80;
+      max-width: 92vw; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .footer-version { text-align: center; margin-top: 10px; font-size: 0.72rem; font-weight: 800; color: rgba(15,23,42,0.72); }
+  </style>
+</head>
+<body>
+  <div class="sky-layer">
+    <div class="sun-glow"></div>
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+    <div class="cloud cloud-4"></div>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- 0. AUTH SCREEN -->
+    <div id="screen-login" class="screen active">
+      <div class="title-box">
+        <h1><span class="accent-yellow">POKÉMON</span><br>QUIZ & <span class="accent-red">CATCH</span></h1>
+        <div class="version-tag">Version 1.0.0 • Firebase & BETA Mechanics</div>
+      </div>
+
+      <div class="panel-card" style="text-align:center;">
+        <div id="firebase-status" class="firebase-status-bar">Menghubungkan ke Firebase...</div>
+
+        <div class="auth-tabs">
+          <button type="button" id="tab-auth-login" class="auth-tab-btn active" data-auth-tab="login">Login Akun</button>
+          <button type="button" id="tab-auth-register" class="auth-tab-btn" data-auth-tab="register">Create Account</button>
+        </div>
+
+        <div id="form-login-box">
+          <div class="input-group">
+            <label for="login-username">Email atau Username Akun</label>
+            <input type="text" id="login-username" class="login-input" placeholder="trainer@pokemon.com atau Username..." maxlength="60" autocomplete="username" />
+          </div>
+          <div class="input-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" class="login-input" placeholder="Masukkan password..." maxlength="40" autocomplete="current-password" />
+          </div>
+          <button type="button" id="btn-submit-login" class="menu-btn btn-quiz">LOGIN MASUK LOBI</button>
+          <p class="auth-switch-link">Belum punya akun? <span data-auth-tab="register">Create Account di sini</span></p>
+        </div>
+
+        <div id="form-register-box" style="display:none;">
+          <div class="input-group">
+            <label for="reg-username">Username Trainer Baru</label>
+            <input type="text" id="reg-username" class="login-input" placeholder="Buat username (contoh: RedSky)" maxlength="20" autocomplete="username" />
+          </div>
+          <div class="input-group">
+            <label for="reg-email">Email Akun (Opsional)</label>
+            <input type="email" id="reg-email" class="login-input" placeholder="trainer@pokemon.com" maxlength="60" autocomplete="email" />
+          </div>
+          <div class="input-group">
+            <label for="reg-password">Buat Password</label>
+            <input type="password" id="reg-password" class="login-input" placeholder="Minimal 6 karakter..." maxlength="40" autocomplete="new-password" />
+          </div>
+          <div class="input-group">
+            <label for="reg-confirm">Konfirmasi Password</label>
+            <input type="password" id="reg-confirm" class="login-input" placeholder="Ulangi password..." maxlength="40" autocomplete="new-password" />
+          </div>
+          <button type="button" id="btn-submit-register" class="menu-btn btn-create">CREATE ACCOUNT & MASUK</button>
+          <p class="auth-switch-link">Sudah punya akun? <span data-auth-tab="login">Login sekarang</span></p>
+        </div>
+
+        <details style="margin-top:14px; text-align:left; background:#f8fafc; border:2px solid #cbd5e1; border-radius:12px; padding:8px 10px; font-size:0.75rem;">
+          <summary style="cursor:pointer; font-weight:800; color:#0284c7;">⚙️ Tempel Firebase Config (Hubungkan Akun & Leaderboard Lama)</summary>
+          <p style="margin:6px 0; color:#475569; line-height:1.35;">Paste JSON <code>firebaseConfig</code> dari project Firebase kamu supaya akun, Pokédex, dan Leaderboard tersinkron:</p>
+          <textarea id="fb-config-textarea" style="width:100%; height:84px; border:2px solid #94a3b8; border-radius:8px; padding:6px; font-family:monospace; font-size:0.7rem;" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
+          <button type="button" id="btn-save-fb-config" class="btn-mini" style="margin-top:6px; width:100%; padding:7px; background:#38bdf8; color:#0f172a;">💾 Simpan & Hubungkan Firebase</button>
+        </details>
+      </div>
+
+      <div class="footer-version">Pokémon Quiz & Catch • Firebase Auth + Firestore</div>
+    </div>
+
+    <!-- 1. MAIN LOBBY SCREEN -->
+    <div id="screen-lobby" class="screen">
+      <div class="title-box">
+        <h1><span class="accent-yellow">POKÉMON</span><br>QUIZ & <span class="accent-red">CATCH</span></h1>
+        <div class="version-tag" id="lobby-rank-tag">Version 1.0.0 • Bronze I (0 RP)</div>
+      </div>
+
+      <div class="splash-banner" id="splash-banner" title="Klik buat ganti sapaan!">
+        <span id="splash-text" class="splash-text">☁️ Langit cerah buat nangkap Shiny hari ini!</span>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-left">
+          <button type="button" class="btn-mini btn-logout" id="btn-logout">Log out</button>
+          <button type="button" class="btn-mini btn-delete" id="btn-delete-account">Delete Account</button>
+        </div>
+
+        <div class="avatar-circle" id="avatar-circle" title="Klik untuk ganti avatar 3D Pokémon">
+          <img id="player-avatar" src="" alt="Avatar 3D" />
+        </div>
+
+        <div class="profile-right">
+          <div class="user-badge" id="user-badge" title="Klik untuk copy Firebase UID">
+            <div class="u-name" id="display-username">LOADING...</div>
+            <div class="u-id" id="display-userid">ID: -</div>
+          </div>
+          <div class="right-tools-row">
+            <button type="button" class="btn-leaderboard-box" id="btn-leaderboard" title="Buka Leaderboard">🏆 Rank</button>
+            <button type="button" id="btn-sound-toggle" class="btn-audio-box" title="Play / Mute Musik & SFX">🔊</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-stack">
+        <button type="button" class="menu-btn btn-quiz" id="btn-menu-quiz">QUIZ</button>
+        <button type="button" class="menu-btn btn-pvp" id="btn-menu-pvp">PvP</button>
+        <button type="button" class="menu-btn btn-pokedex" id="btn-menu-pokedex">Pokedex (110)</button>
+        <button type="button" class="menu-btn btn-inventory" id="btn-menu-inventory">Inventory</button>
+        <button type="button" class="menu-btn btn-fuse" id="btn-menu-fuse">
+          Fuse pokemon
+          <span class="sub-soon">(coming soon)</span>
+        </button>
+      </div>
+
+      <div class="footer-version">Version 1.0.0 • Cloud Synced</div>
+    </div>
+
+    <!-- 2. QUIZ SCREEN (BETA MECHANICS: TIMER, COMBO, LIVES, CANDY, WILD QTE) -->
+    <div id="screen-quiz" class="screen">
+      <div class="panel-card">
+        <div class="panel-header">
+          <h2>🎯 Pokémon Quiz</h2>
+          <button type="button" class="btn-back" data-back-lobby>← Lobi</button>
+        </div>
+
+        <div class="hud-strip">
+          <div class="hud-box"><div class="hud-lbl">Skor</div><div class="hud-val" id="hud-score">0</div></div>
+          <div class="hud-box"><div class="hud-lbl">Combo</div><div class="hud-val" id="hud-combo">0x</div></div>
+          <div class="hud-box"><div class="hud-lbl">Nyawa</div><div class="hud-val" id="hud-lives">❤️❤️❤️</div></div>
+          <div class="hud-box"><div class="hud-lbl">Candy</div><div class="hud-val" id="hud-candy">🍬 0</div></div>
+        </div>
+
+        <div class="timer-track"><div class="timer-fill" id="quiz-timer-fill"></div></div>
+
+        <div class="quiz-poke-box">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px;">
+            <span id="quiz-cat-tag" style="font-size:0.7rem; font-weight:800; background:#fef08a; border:1.5px solid #1e293b; border-radius:999px; padding:2px 8px;">Kategori</span>
+            <span id="quiz-timer-txt" style="font-size:0.74rem; font-weight:800; color:#0f172a;">12.0s</span>
+          </div>
+          <p style="font-size:0.84rem; font-weight:800; margin-bottom:6px;" id="quiz-prompt">Memuat soal...</p>
+          <img id="quiz-img" src="" alt="Quiz Artwork" style="display:none;" />
+        </div>
+
+        <div class="quiz-options" id="quiz-options"></div>
+        <p id="quiz-feedback" style="font-size:0.78rem; font-weight:800; text-align:center; margin-top:8px; min-height:20px; color:#0f172a;"></p>
+
+        <div class="party-mini-bar" id="quiz-party-strip"></div>
+      </div>
+    </div>
+
+    <!-- 3. PVP LOBBY SCREEN -->
+    <div id="screen-pvp-lobby" class="screen">
+      <div class="panel-card">
+        <div class="panel-header">
+          <h2>⚔️ PvP Arena Lobby</h2>
+          <button type="button" class="btn-back" data-back-lobby>← Lobi</button>
+        </div>
+        <div class="music-pill">☁️ Rank: <span id="pvp-rank-label">Bronze I (0 RP)</span></div>
+        <p style="font-size:0.82rem; margin-bottom:10px; line-height:1.4;">
+          Pilih Pokémon aktif di slot tim kamu (bisa diatur di Inventory), lalu lawan rival acak untuk meraih RP, poin, dan bola!
+        </p>
+        <div style="text-align:center; background:#f1f5f9; border:2.5px solid #1e293b; border-radius:14px; padding:10px; margin-bottom:12px;">
+          <img id="pvp-my-sprite" src="" style="width:86px;height:86px;object-fit:contain;margin:0 auto;display:block;" />
+          <div style="font-family:'Fredoka',sans-serif; font-size:1.05rem;" id="pvp-my-name">Charizard Lv.1</div>
+        </div>
+        <button type="button" class="menu-btn btn-pvp" id="btn-start-pvp">MULAI BATTLE PVP!</button>
+      </div>
+    </div>
+
+    <!-- 4. PVP BATTLE SCREEN (BETA MOVESET, ACCURACY & LEVEL SCALING) -->
+    <div id="screen-pvp-battle" class="screen">
+      <div class="panel-card">
+        <div class="panel-header">
+          <h2>🔥 PvP Battle!</h2>
+          <button type="button" class="btn-back" data-back-lobby>Kabur</button>
+        </div>
+        <div class="music-pill battle">🔥 BGM: Battle Theme Aktif!</div>
+        <div class="battle-arena">
+          <div class="fighter">
+            <div style="font-weight:800; font-size:0.78rem;" id="bat-p1-name">Kamu</div>
+            <div class="hp-bar-wrap"><div id="bat-p1-hp" class="hp-fill" style="width:100%;"></div></div>
+            <img id="bat-p1-img" src="" />
+          </div>
+          <div style="font-family:'Fredoka',sans-serif; font-weight:700; color:#ef4444;">VS</div>
+          <div class="fighter">
+            <div style="font-weight:800; font-size:0.78rem;" id="bat-p2-name">Rival</div>
+            <div class="hp-bar-wrap"><div id="bat-p2-hp" class="hp-fill" style="width:100%;"></div></div>
+            <img id="bat-p2-img" src="" />
+          </div>
+        </div>
+        <p id="battle-log" style="font-size:0.8rem; font-weight:800; text-align:center; margin-bottom:10px; min-height:22px;">Giliranmu menyerang!</p>
+        <div class="quiz-options" id="pvp-moves-grid"></div>
+      </div>
+    </div>
+
+    <!-- 5. POKEDEX (110 POKEMON 3D) -->
+    <div id="screen-pokedex" class="screen">
+      <div class="panel-card">
+        <div class="panel-header">
+          <h2 id="dex-title">📖 Pokédex (0/110)</h2>
+          <button type="button" class="btn-back" data-back-lobby>← Lobi</button>
+        </div>
+        <div class="dex-tabs">
+          <button type="button" id="tab-dex-all" class="dex-tab-btn active">Semua (110)</button>
+          <button type="button" id="tab-dex-caught" class="dex-tab-btn">Tertangkap</button>
+        </div>
+        <div class="pokedex-grid" id="pokedex-grid"></div>
+      </div>
+    </div>
+
+    <!-- 6. INVENTORY, BALL BAG, PARTY SLOTS, CANDY LEVEL-UP & EVOLUTION -->
+    <div id="screen-inventory" class="screen">
+      <div class="panel-card">
+        <div class="panel-header">
+          <h2>🎒 Inventory & Tim</h2>
+          <button type="button" class="btn-back" data-back-lobby>← Lobi</button>
+        </div>
+
+        <div class="items-row">
+          <div class="item-box"><div class="item-icon">🔴</div><div class="item-name">Poké Ball</div><div class="item-qty" id="inv-ball-poke">x3</div></div>
+          <div class="item-box"><div class="item-icon">🔵</div><div class="item-name">Great Ball</div><div class="item-qty" id="inv-ball-great">x1</div></div>
+          <div class="item-box"><div class="item-icon">🟡</div><div class="item-name">Ultra Ball</div><div class="item-qty" id="inv-ball-ultra">x0</div></div>
+          <div class="item-box"><div class="item-icon">🟣</div><div class="item-name">Master Ball</div><div class="item-qty" id="inv-ball-master">x0</div></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; font-size:0.78rem; font-weight:800; background:#f1f5f9; border:2px solid #1e293b; border-radius:12px; padding:6px 10px; margin-bottom:8px;">
+          <span id="inv-candy-txt">🍬 Candy: 0</span>
+          <span id="inv-points-txt">⭐ 0 pts</span>
+          <span id="inv-rp-txt">🏅 0 RP</span>
+        </div>
+
+        <div class="inv-section-title">Slot Tim Aktif (Maks 3)</div>
+        <div class="team-manage-row" id="party-slots-container"></div>
+
+        <div class="inv-section-title">Koleksi Pokémon Kamu (<span id="inv-caught-count">0</span>)</div>
+        <div class="pokedex-grid" id="inventory-grid"></div>
+      </div>
+    </div>
+
+    <!-- 7. LEADERBOARD SCREEN -->
+    <div id="screen-leaderboard" class="screen">
+      <div class="panel-card">
+        <div class="panel-header">
+          <h2>🏆 Leaderboard</h2>
+          <button type="button" class="btn-back" data-back-lobby>← Lobi</button>
+        </div>
+        <div class="music-pill">☁️ Global & Firebase Trainers</div>
+        <div id="leaderboard-list" class="lb-list"></div>
+      </div>
+    </div>
+
+    <!-- 8. FUSE LOBBY SCREEN -->
+    <div id="screen-fuse" class="screen">
+      <div class="panel-card" style="text-align:center;">
+        <div class="panel-header">
+          <h2>🧬 Fusion Lab</h2>
+          <button type="button" class="btn-back" data-back-lobby>← Lobi</button>
+        </div>
+        <div style="padding:22px 10px;">
+          <div style="font-size:2.6rem; margin-bottom:8px;">🧪✨</div>
+          <h3 style="font-family:'Fredoka',sans-serif; font-size:1.25rem; margin-bottom:6px;">Fuse Pokémon (Coming Soon)</h3>
+          <p style="font-size:0.85rem; color:#475569; line-height:1.5;">
+            Laboratorium DNA sedang dibangun di atas awan! Sebentar lagi kamu bisa menggabungkan Pokémon jadi spesies baru.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WILD POKEMON QTE CATCH OVERLAY -->
+  <div id="qte-overlay" class="qte-backdrop">
+    <div id="qte-box" class="qte-box">
+      <div id="qte-banner" class="qte-banner">⚡ QUICK EVENT ACAK! POKÉMON LIAR MUNCUL! ⚡</div>
+      <div id="qte-rarity" style="font-size:0.78rem; font-weight:800;">Common Pokémon</div>
+      <img id="qte-sprite" class="qte-sprite" src="" alt="Wild Pokémon" />
+      <div id="qte-name" style="font-family:'Fredoka',sans-serif; font-size:1.1rem;">Caterpie</div>
+      <div id="qte-info" style="font-size:0.72rem; font-weight:700; color:#475569; margin-top:2px;">Pilih bola lalu tekan LEMPAR BOLA!</div>
+
+      <div class="ball-selector-row" id="qte-ball-selector"></div>
+
+      <div class="qte-bar">
+        <div id="qte-zone" class="qte-zone" style="width:36%;"></div>
+        <div id="qte-cursor" class="qte-cursor"></div>
+      </div>
+
+      <button type="button" id="btn-qte-throw" class="menu-btn btn-quiz" style="padding:10px 14px; font-size:1.05rem;">🎯 LEMPAR BOLA!</button>
+      <p id="qte-status" style="font-size:0.78rem; font-weight:800; margin-top:8px; min-height:20px;"></p>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div id="delete-modal" class="modal-backdrop">
+    <div class="modal-box">
+      <h3 style="font-family:'Fredoka',sans-serif; font-size:1.2rem; color:#dc2626;">Hapus Akun Firebase?</h3>
+      <p id="delete-modal-text" style="font-size:0.84rem; color:#334155; margin-top:8px; line-height:1.45;">
+        Data akun dan ID kamu di Firebase akan dihapus permanen.
+      </p>
+      <div class="modal-actions">
+        <button type="button" id="btn-cancel-delete" style="background:#e2e8f0;">Batal</button>
+        <button type="button" id="btn-confirm-delete" style="background:#ef4444; color:#fff;">Hapus Permanen</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      deleteUser,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc,
+      updateDoc,
+      deleteDoc,
+      collection,
+      getDocs,
+      query,
+      limit
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    /* =========================================================================
+       0. FIREBASE CONFIG
+       ========================================================================= */
+    const DEFAULT_FIREBASE_CONFIG = {
+      apiKey: "YOUR_FIREBASE_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    function getActiveFirebaseConfig() {
+      try {
+        const saved = localStorage.getItem("quiz_poke_custom_fb_config");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.apiKey && parsed.projectId) {
+            if (!parsed.databaseURL) parsed.databaseURL = `https://${parsed.projectId}-default-rtdb.firebaseio.com`;
+            return parsed;
+          }
+        }
+      } catch (e) {}
+      return DEFAULT_FIREBASE_CONFIG;
+    }
+
+    const firebaseConfig = getActiveFirebaseConfig();
+    const isFirebaseConfigured = Boolean(
+      firebaseConfig.apiKey &&
+      !firebaseConfig.apiKey.startsWith("YOUR_") &&
+      firebaseConfig.projectId &&
+      !firebaseConfig.projectId.startsWith("YOUR_")
+    );
+
+    let app = null, auth = null, db = null;
+    const statusEl = document.getElementById("firebase-status");
+
+    if (isFirebaseConfigured) {
+      try {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        statusEl.textContent = "✅ Terhubung ke Firebase Cloud (" + firebaseConfig.projectId + ")";
+        statusEl.classList.add("ok");
+      } catch (err) {
+        statusEl.textContent = "⚠️ Gagal inisialisasi Firebase: " + err.message;
+        statusEl.classList.add("warn");
+      }
+    } else {
+      statusEl.textContent = "⚠️ Tempel firebaseConfig di panel ⚙️ bawah (atau mainkan mode lokal)";
+      statusEl.classList.add("warn");
+    }
+
+    /* =========================================================================
+       1. AUDIO ENGINE
+       ========================================================================= */
+    class SoftAudioManager {
+      constructor() {
+        this.ctx = null;
+        this.isMuted = false;
+        this.currentTrack = "main";
+        this.loopTimer = null;
+        this.step = 0;
+        this._unlockBound = false;
+      }
+      ensureContext() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === "suspended") this.ctx.resume().catch(() => {});
+        this.bindAutoUnlock();
+      }
+      bindAutoUnlock() {
+        if (this._unlockBound) return;
+        this._unlockBound = true;
+        const unlock = () => {
+          if (this.isMuted) return;
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) this.ctx = new AudioCtx();
+          }
+          if (this.ctx && this.ctx.state === "suspended") {
+            this.ctx.resume().then(() => {
+              const t = this.currentTrack || "main";
+              this.currentTrack = null;
+              this.switchBGM(t);
+            }).catch(() => {});
+          } else if (!this.loopTimer && this.currentTrack) {
+            const t = this.currentTrack;
+            this.currentTrack = null;
+            this.switchBGM(t);
+          }
+        };
+        document.addEventListener("pointerdown", unlock, { passive: true });
+        document.addEventListener("keydown", unlock, { passive: true });
+      }
+      stopCurrentBGM() {
+        if (this.loopTimer) { clearInterval(this.loopTimer); this.loopTimer = null; }
+      }
+      playWarmTone(freq, duration = 0.5, volume = 0.07, type = "sine", delay = 0) {
+        if (this.isMuted || !this.ctx || this.ctx.state !== "running") return;
+        const now = this.ctx.currentTime + delay;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(volume, now + Math.min(0.05, duration * 0.25));
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + duration + 0.04);
+      }
+      playSFX(name) {
+        if (this.isMuted) return;
+        this.ensureContext();
+        if (name === "click") {
+          this.playWarmTone(587.33, 0.12, 0.08, "sine", 0);
+        } else if (name === "success") {
+          this.playWarmTone(523.25, 0.28, 0.08, "sine", 0);
+          this.playWarmTone(659.25, 0.28, 0.08, "sine", 0.07);
+          this.playWarmTone(783.99, 0.36, 0.08, "sine", 0.14);
+        } else if (name === "error") {
+          this.playWarmTone(230, 0.24, 0.08, "triangle", 0);
+          this.playWarmTone(185, 0.3, 0.07, "triangle", 0.09);
+        } else if (name === "hit") {
+          this.playWarmTone(145, 0.22, 0.11, "triangle", 0);
+        }
+      }
+      switchBGM(trackName) {
+        if (this.currentTrack === trackName && this.loopTimer) return;
+        this.currentTrack = trackName;
+        this.step = 0;
+        this.stopCurrentBGM();
+        if (this.isMuted) return;
+        this.ensureContext();
+        const seq = trackName === "battle"
+          ? [293.66, 349.23, 329.63, 261.63, 293.66, 392.0, 349.23, 329.63]
+          : trackName === "quiz"
+          ? [523.25, 659.25, 587.33, 493.88, 440.0, 523.25, 392.0, 440.0]
+          : [349.23, 440.0, 523.25, 659.25, 587.33, 523.25, 440.0, 392.0];
+        const intervalMs = trackName === "battle" ? 380 : 580;
+        const tickAudio = () => {
+          if (this.isMuted || this.currentTrack !== trackName) return;
+          const note = seq[this.step % seq.length];
+          this.playWarmTone(note, 0.55, 0.045, trackName === "battle" ? "triangle" : "sine", 0);
+          this.step++;
+        };
+        tickAudio();
+        this.loopTimer = setInterval(tickAudio, intervalMs);
+      }
+      toggleMute() {
+        this.isMuted = !this.isMuted;
+        if (this.isMuted) this.stopCurrentBGM();
+        else {
+          this.ensureContext();
+          const t = this.currentTrack || "main";
+          this.currentTrack = null;
+          this.switchBGM(t);
+        }
+        return this.isMuted;
+      }
+    }
+    const audio = new SoftAudioManager();
+
+    /* =========================================================================
+       2. POKEMON ROSTER, BALL MATRIX, RANKS, EVOLUTION & MOVESET (BETA)
+       ========================================================================= */
+    const POKEMON_NAMES_110 = [
+      "Bulbasaur","Ivysaur","Venusaur","Charmander","Charmeleon","Charizard","Squirtle","Wartortle","Blastoise","Caterpie",
+      "Metapod","Butterfree","Weedle","Kakuna","Beedrill","Pidgey","Pidgeotto","Pidgeot","Rattata","Raticate",
+      "Spearow","Fearow","Ekans","Arbok","Pikachu","Raichu","Sandshrew","Sandslash","Nidoran♀","Nidorina",
+      "Nidoqueen","Nidoran♂","Nidorino","Nidoking","Clefairy","Clefable","Vulpix","Ninetales","Jigglypuff","Wigglytuff",
+      "Zubat","Golbat","Oddish","Gloom","Vileplume","Paras","Parasect","Venonat","Venomoth","Diglett",
+      "Dugtrio","Meowth","Persian","Psyduck","Golduck","Mankey","Primeape","Growlithe","Arcanine","Poliwag",
+      "Poliwhirl","Poliwrath","Abra","Kadabra","Alakazam","Machop","Machoke","Machamp","Bellsprout","Weepinbell",
+      "Victreebel","Tentacool","Tentacruel","Geodude","Graveler","Golem","Ponyta","Rapidash","Slowpoke","Slowbro",
+      "Magnemite","Magneton","Farfetch'd","Doduo","Dodrio","Seel","Dewgong","Grimer","Muk","Shellder",
+      "Cloyster","Gastly","Haunter","Gengar","Onix","Drowzee","Hypno","Krabby","Kingler","Voltorb",
+      "Electrode","Exeggcute","Exeggutor","Cubone","Marowak","Hitmonlee","Hitmonchan","Lickitung","Koffing","Weezing"
+    ];
+
+    function get3DPokemonImg(id) {
+      return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+    }
+
+    function buildPokemonRoster() {
+      const commonList = [
+        ["Caterpie",10],["Metapod",11],["Weedle",13],["Kakuna",14],["Pidgey",16],["Rattata",19],["Spearow",21],
+        ["Ekans",23],["Sandshrew",27],["Nidoran♀",29],["Clefairy",35],["Vulpix",37],["Jigglypuff",39],["Zubat",41],
+        ["Oddish",43],["Paras",46],["Venonat",48],["Diglett",50],["Meowth",52],["Psyduck",54],["Mankey",56],
+        ["Poliwag",60],["Bellsprout",69],["Geodude",74],["Slowpoke",79]
+      ];
+      const uncommonList = [
+        ["Pidgeotto",17],["Raticate",20],["Fearow",22],["Arbok",24],["Sandslash",28],["Nidorino",33],["Nidorina",30],
+        ["Golbat",42],["Gloom",44],["Parasect",47],["Venomoth",49],["Dugtrio",51],["Persian",53],["Golduck",55],
+        ["Primeape",57],["Growlithe",58],["Poliwhirl",61],["Kadabra",64],["Machoke",67],["Weepinbell",70],
+        ["Tentacool",72],["Ponyta",77],["Magnemite",81],["Farfetch'd",83],["Doduo",84]
+      ];
+      const rareList = [
+        ["Pidgeot",18],["Raichu",26],["Ninetales",38],["Wigglytuff",40],["Vileplume",45],["Arcanine",59],
+        ["Poliwrath",62],["Alakazam",65],["Machamp",68],["Victreebel",71],["Tentacruel",73],["Golem",76],
+        ["Rapidash",78],["Slowbro",80],["Magneton",82],["Dewgong",87],["Muk",89],["Cloyster",91],
+        ["Gengar",94],["Hypno",97],["Kingler",99],["Electrode",101],["Exeggutor",103],["Marowak",105],["Hitmonlee",106]
+      ];
+      const epicList = [["Hitmonchan",107],["Lickitung",108],["Weezing",110]];
+      const legendaryList = [["Charizard",6],["Blastoise",9],["Venusaur",3],["Pikachu",25]];
+
+      const pool = [];
+      const addGroup = (arr, rarity, color, baseSpeed, chance) => {
+        arr.forEach(([name, dexId], i) => {
+          pool.push({
+            id: `${rarity[0]}-${i}`,
+            name,
+            dexId,
+            rarity,
+            color,
+            baseSpeed,
+            chance
+          });
+        });
+      };
+      addGroup(commonList, "Common", "#64748b", 1.15, 0.45);
+      addGroup(uncommonList, "Uncommon", "#16a34a", 1.38, 0.27);
+      addGroup(rareList, "Rare", "#2563eb", 1.68, 0.16);
+      addGroup(epicList, "Epic", "#9333ea", 2.02, 0.08);
+      addGroup(legendaryList, "Legendary", "#d97706", 2.45, 0.04);
+      return pool;
+    }
+
+    const POKEMON_POOL = buildPokemonRoster();
+
+    const BALL_DEFS = {
+      poke:   { key: "poke",   label: "Poké Ball",   icon: "🔴", autoCatch: false },
+      great:  { key: "great",  label: "Great Ball",  icon: "🔵", autoCatch: false },
+      ultra:  { key: "ultra",  label: "Ultra Ball",  icon: "🟡", autoCatch: false },
+      master: { key: "master", label: "Master Ball", icon: "🟣", autoCatch: true }
+    };
+
+    const BALL_RARITY_MATRIX = {
+      poke: {
+        Common:    { zoneWidth: 42, speedMult: 0.90, catchRate: 0.95, difficultyLabel: "Mudah" },
+        Uncommon:  { zoneWidth: 34, speedMult: 1.00, catchRate: 0.85, difficultyLabel: "Cukup Mudah" },
+        Rare:      { zoneWidth: 16, speedMult: 1.32, catchRate: 0.52, difficultyLabel: "Agak Susah" },
+        Epic:      { zoneWidth: 10, speedMult: 1.55, catchRate: 0.28, difficultyLabel: "Sangat Susah" },
+        Legendary: { zoneWidth: 6,  speedMult: 1.80, catchRate: 0.12, difficultyLabel: "Ekstrem!" }
+      },
+      great: {
+        Common:    { zoneWidth: 56, speedMult: 0.80, catchRate: 1.00, difficultyLabel: "Sangat Mudah" },
+        Uncommon:  { zoneWidth: 48, speedMult: 0.88, catchRate: 0.96, difficultyLabel: "Mudah" },
+        Rare:      { zoneWidth: 32, speedMult: 1.02, catchRate: 0.86, difficultyLabel: "Pas" },
+        Epic:      { zoneWidth: 22, speedMult: 1.22, catchRate: 0.65, difficultyLabel: "Menantang" },
+        Legendary: { zoneWidth: 11, speedMult: 1.50, catchRate: 0.30, difficultyLabel: "Susah" }
+      },
+      ultra: {
+        Common:    { zoneWidth: 70, speedMult: 0.72, catchRate: 1.00, difficultyLabel: "Santai" },
+        Uncommon:  { zoneWidth: 62, speedMult: 0.78, catchRate: 1.00, difficultyLabel: "Sangat Mudah" },
+        Rare:      { zoneWidth: 46, speedMult: 0.88, catchRate: 0.95, difficultyLabel: "Mudah" },
+        Epic:      { zoneWidth: 34, speedMult: 1.02, catchRate: 0.85, difficultyLabel: "Cukup Mudah" },
+        Legendary: { zoneWidth: 20, speedMult: 1.22, catchRate: 0.68, difficultyLabel: "Menantang" }
+      },
+      master: {
+        Common:    { zoneWidth: 100, speedMult: 0.00, catchRate: 1.00, difficultyLabel: "100% Auto-Catch" },
+        Uncommon:  { zoneWidth: 100, speedMult: 0.00, catchRate: 1.00, difficultyLabel: "100% Auto-Catch" },
+        Rare:      { zoneWidth: 100, speedMult: 0.00, catchRate: 1.00, difficultyLabel: "100% Auto-Catch" },
+        Epic:      { zoneWidth: 100, speedMult: 0.00, catchRate: 1.00, difficultyLabel: "100% Auto-Catch" },
+        Legendary: { zoneWidth: 100, speedMult: 0.00, catchRate: 1.00, difficultyLabel: "100% Auto-Catch" }
+      }
+    };
+
+    const RANK_TIERS = [
+      { name: "Bronze I", minRp: 0, icon: "🥉" },
+      { name: "Bronze II", minRp: 150, icon: "🥉" },
+      { name: "Silver I", minRp: 300, icon: "🥈" },
+      { name: "Silver II", minRp: 500, icon: "🥈" },
+      { name: "Gold I", minRp: 750, icon: "🥇" },
+      { name: "Gold II", minRp: 1050, icon: "🥇" },
+      { name: "Platinum", minRp: 1400, icon: "💎" },
+      { name: "Master", minRp: 1850, icon: "👑" }
+    ];
+
+    const EVO_CHAIN = {
+      10: { toDex: 11, toName: "Metapod", minLv: 3, candyCost: 1 },
+      11: { toDex: 12, toName: "Butterfree", minLv: 6, candyCost: 2 },
+      13: { toDex: 14, toName: "Kakuna", minLv: 3, candyCost: 1 },
+      14: { toDex: 15, toName: "Beedrill", minLv: 6, candyCost: 2 },
+      16: { toDex: 17, toName: "Pidgeotto", minLv: 4, candyCost: 1 },
+      17: { toDex: 18, toName: "Pidgeot", minLv: 8, candyCost: 2 },
+      19: { toDex: 20, toName: "Raticate", minLv: 4, candyCost: 1 },
+      21: { toDex: 22, toName: "Fearow", minLv: 5, candyCost: 1 },
+      23: { toDex: 24, toName: "Arbok", minLv: 5, candyCost: 1 },
+      27: { toDex: 28, toName: "Sandslash", minLv: 5, candyCost: 1 },
+      29: { toDex: 30, toName: "Nidorina", minLv: 4, candyCost: 1 },
+      30: { toDex: 31, toName: "Nidoqueen", minLv: 8, candyCost: 2 },
+      33: { toDex: 34, toName: "Nidoking", minLv: 8, candyCost: 2 },
+      35: { toDex: 36, toName: "Clefable", minLv: 6, candyCost: 2 },
+      37: { toDex: 38, toName: "Ninetales", minLv: 6, candyCost: 2 },
+      39: { toDex: 40, toName: "Wigglytuff", minLv: 6, candyCost: 2 },
+      41: { toDex: 42, toName: "Golbat", minLv: 5, candyCost: 1 },
+      43: { toDex: 44, toName: "Gloom", minLv: 4, candyCost: 1 },
+      44: { toDex: 45, toName: "Vileplume", minLv: 8, candyCost: 2 },
+      46: { toDex: 47, toName: "Parasect", minLv: 5, candyCost: 1 },
+      48: { toDex: 49, toName: "Venomoth", minLv: 5, candyCost: 1 },
+      50: { toDex: 51, toName: "Dugtrio", minLv: 5, candyCost: 1 },
+      52: { toDex: 53, toName: "Persian", minLv: 5, candyCost: 1 },
+      54: { toDex: 55, toName: "Golduck", minLv: 5, candyCost: 1 },
+      56: { toDex: 57, toName: "Primeape", minLv: 5, candyCost: 1 },
+      58: { toDex: 59, toName: "Arcanine", minLv: 7, candyCost: 2 },
+      60: { toDex: 61, toName: "Poliwhirl", minLv: 4, candyCost: 1 },
+      61: { toDex: 62, toName: "Poliwrath", minLv: 8, candyCost: 2 },
+      64: { toDex: 65, toName: "Alakazam", minLv: 7, candyCost: 2 },
+      67: { toDex: 68, toName: "Machamp", minLv: 7, candyCost: 2 },
+      69: { toDex: 70, toName: "Weepinbell", minLv: 4, candyCost: 1 },
+      70: { toDex: 71, toName: "Victreebel", minLv: 8, candyCost: 2 },
+      72: { toDex: 73, toName: "Tentacruel", minLv: 6, candyCost: 2 },
+      74: { toDex: 75, toName: "Graveler", minLv: 4, candyCost: 1 },
+      75: { toDex: 76, toName: "Golem", minLv: 8, candyCost: 2 },
+      77: { toDex: 78, toName: "Rapidash", minLv: 6, candyCost: 2 },
+      79: { toDex: 80, toName: "Slowbro", minLv: 6, candyCost: 2 },
+      81: { toDex: 82, toName: "Magneton", minLv: 6, candyCost: 2 },
+      84: { toDex: 85, toName: "Dodrio", minLv: 6, candyCost: 2 },
+      86: { toDex: 87, toName: "Dewgong", minLv: 6, candyCost: 2 },
+      88: { toDex: 89, toName: "Muk", minLv: 6, candyCost: 2 },
+      90: { toDex: 91, toName: "Cloyster", minLv: 6, candyCost: 2 },
+      92: { toDex: 93, toName: "Haunter", minLv: 4, candyCost: 1 },
+      93: { toDex: 94, toName: "Gengar", minLv: 8, candyCost: 2 },
+      96: { toDex: 97, toName: "Hypno", minLv: 6, candyCost: 2 },
+      98: { toDex: 99, toName: "Kingler", minLv: 6, candyCost: 2 },
+      100: { toDex: 101, toName: "Electrode", minLv: 6, candyCost: 2 },
+      102: { toDex: 103, toName: "Exeggutor", minLv: 6, candyCost: 2 },
+      104: { toDex: 105, toName: "Marowak", minLv: 6, candyCost: 2 }
+    };
+
+    const POKEMON_MOVESET = [
+      { id: "tackle", name: "Tackle", power: 28, acc: 98, unlockLv: 1, desc: "Serangan fisik dasar" },
+      { id: "quick_strike", name: "Quick Strike", power: 42, acc: 95, unlockLv: 3, desc: "Serangan cepat presisi tinggi" },
+      { id: "element_burst", name: "Element Burst", power: 62, acc: 90, unlockLv: 5, desc: "Ledakan energi elemen" },
+      { id: "hyper_nova", name: "Hyper Nova", power: 92, acc: 84, unlockLv: 8, desc: "Jurus pamungkas level tinggi" }
+    ];
+
+    const QUESTIONS = [
+      { cat: "Pokémon", q: "Pokémon #25 dengan pipi merah dan ekor berbentuk petir adalah...", opts: ["Raichu", "Pikachu", "Jolteon", "Plusle"], ans: 1 },
+      { cat: "Pokémon", q: "Evolusi pertama Charmander adalah...", opts: ["Charizard", "Charmeleon", "Flareon", "Growlithe"], ans: 1 },
+      { cat: "Pokémon", q: "Bola penangkap dengan tingkat tangkapan 100% tanpa gagal adalah...", opts: ["Ultra Ball", "Great Ball", "Master Ball", "Premier Ball"], ans: 2 },
+      { cat: "Sains", q: "Planet terbesar di tata surya kita adalah...", opts: ["Saturnus", "Jupiter", "Neptunus", "Uranus"], ans: 1 },
+      { cat: "Sains", q: "Rumus kimia air adalah...", opts: ["CO2", "H2O", "O2", "NaCl"], ans: 1 },
+      { cat: "Matematika", q: "Hasil dari 12 x 8 + 14 adalah...", opts: ["100", "110", "112", "120"], ans: 1 },
+      { cat: "Matematika", q: "Akar kuadrat dari 144 adalah...", opts: ["11", "12", "13", "14"], ans: 1 },
+      { cat: "Teknologi", q: "HTML berfungsi untuk menyusun...", opts: ["Struktur halaman web", "Database server", "Driver kartu grafis", "Sistem operasi"], ans: 0 },
+      { cat: "Indonesia", q: "Ibu kota negara Indonesia berdasarkan UU IKN adalah...", opts: ["Jakarta", "Nusantara", "Bandung", "Balikpapan"], ans: 1 },
+      { cat: "Astronomi", q: "Bintang terdekat dari Bumi selain Matahari adalah...", opts: ["Sirius", "Proxima Centauri", "Vega", "Betelgeuse"], ans: 1 },
+      { cat: "Logika", q: "Jika hari ini Selasa, 10 hari lagi adalah hari...", opts: ["Jumat", "Sabtu", "Minggu", "Senin"], ans: 0 },
+      { cat: "Gaming", q: "Karakter maskot utama Nintendo dengan topi merah adalah...", opts: ["Luigi", "Mario", "Link", "Kirby"], ans: 1 }
+    ];
+
+    function getRankInfo(rp) {
+      let current = RANK_TIERS[0];
+      for (const tier of RANK_TIERS) {
+        if (rp >= tier.minRp) current = tier;
+      }
+      return current;
+    }
+
+    function expNeededForLevel(lv) {
+      return 60 + Math.max(1, Number(lv || 1)) * 30;
+    }
+
+    /* =========================================================================
+       3. PLAYER STATE & FIREBASE SYNC
+       ========================================================================= */
+    const AVATAR_IDS = [25, 6, 9, 3, 133, 94];
+    const SPLASH_GREETINGS = [
+      "☁️ Langit cerah buat nangkap Shiny hari ini!",
+      "⚡ Pikachu 3D siap nemenin petualanganmu!",
+      "✨ Profil & ID sinkron langsung ke Firebase!",
+      "🔥 110 Pokémon menanti di Pokédex!",
+      "🍬 Kumpulin 10x combo buat dapat Candy!",
+      "🎯 Jawab soal & tangkap Pokémon liar di QTE!"
+    ];
+
+    let currentPlayer = null;
+    let currentFilterMode = "all";
+
+    const toFirebaseEmail = (username) => {
+      const clean = username.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "");
+      return `${clean}@pokemonquiz.app`;
+    };
+
+    function makeStarterPoke(dexId, level = 1) {
+      const name = POKEMON_NAMES_110[dexId - 1] || `Pokémon #${dexId}`;
+      return {
+        uid: `${dexId}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        dexId,
+        name,
+        rarity: dexId === 25 ? "Legendary" : "Common",
+        level,
+        exp: 0
+      };
+    }
+
+    function createInitialProfile(uid, username, email = "") {
+      const starter = makeStarterPoke(25, 1);
+      return {
+        uid,
+        username: username.trim().toUpperCase(),
+        email,
+        avatarIdx: 0,
+        caught: [25, 4, 7],
+        points: 120,
+        rp: 0,
+        candy: 2,
+        selectedBall: "poke",
+        balls: { poke: 5, great: 2, ultra: 1, master: 0 },
+        partySlots: [starter, null, null],
+        inventory: [],
+        updatedAt: Date.now()
+      };
+    }
+
+    function normalizePlayerData(raw, uid, fallbackName, fallbackEmail) {
+      const base = createInitialProfile(uid, fallbackName, fallbackEmail);
+      const gd = raw?.gameData || {};
+      const caughtSet = new Set(Array.isArray(raw?.caught) ? raw.caught : base.caught);
+
+      const partySlots = Array.isArray(raw?.partySlots)
+        ? [0, 1, 2].map(i => raw.partySlots[i] || null)
+        : Array.isArray(gd.partySlots)
+        ? [0, 1, 2].map(i => gd.partySlots[i] || null)
+        : base.partySlots;
+
+      const inventory = Array.isArray(raw?.inventory)
+        ? raw.inventory
+        : Array.isArray(gd.inventory)
+        ? gd.inventory
+        : [];
+
+      [...partySlots, ...inventory].forEach(p => {
+        if (p && typeof p.dexId === "number") caughtSet.add(p.dexId);
+      });
+
+      const balls = {
+        poke: typeof raw?.balls?.poke === "number" ? raw.balls.poke : (typeof raw?.items?.pokeball === "number" ? raw.items.pokeball : 5),
+        great: typeof raw?.balls?.great === "number" ? raw.balls.great : 2,
+        ultra: typeof raw?.balls?.ultra === "number" ? raw.balls.ultra : 1,
+        master: typeof raw?.balls?.master === "number" ? raw.balls.master : 0
+      };
+
+      const points = Math.max(typeof raw?.points === "number" ? raw.points : 0, Number(gd.highScore || 0));
+      const rp = typeof raw?.rp === "number" ? raw.rp : Number(gd.rp || 0);
+      const candy = typeof raw?.candy === "number" ? raw.candy : Number(gd.candyCount || 2);
+
+      return {
+        uid,
+        username: String(raw?.username || fallbackName || "TRAINER").toUpperCase(),
+        email: raw?.email || fallbackEmail || "",
+        avatarIdx: typeof raw?.avatarIdx === "number" ? raw.avatarIdx : 0,
+        caught: Array.from(caughtSet),
+        points,
+        rp,
+        candy,
+        selectedBall: BALL_DEFS[raw?.selectedBall] ? raw.selectedBall : "poke",
+        balls,
+        partySlots,
+        inventory,
+        updatedAt: Date.now()
+      };
+    }
+
+    function renderProfile() {
+      if (!currentPlayer) return;
+      const rank = getRankInfo(currentPlayer.rp || 0);
+      document.getElementById("display-username").textContent = currentPlayer.username || "TRAINER";
+      document.getElementById("display-userid").textContent = "ID: " + currentPlayer.uid;
+      document.getElementById("lobby-rank-tag").textContent = `Version 1.0.0 • ${rank.icon} ${rank.name} (${currentPlayer.rp || 0} RP)`;
+      const pokeId = AVATAR_IDS[(currentPlayer.avatarIdx || 0) % AVATAR_IDS.length];
+      document.getElementById("player-avatar").src = get3DPokemonImg(pokeId);
+    }
+
+    async function savePlayerToFirebase() {
+      renderProfile();
+      if (!currentPlayer) return;
+      try {
+        localStorage.setItem(`quiz_poke_local_profile_${currentPlayer.uid}`, JSON.stringify(currentPlayer));
+      } catch (e) {}
+
+      if (db && isFirebaseConfigured && currentPlayer.uid) {
+        try {
+          await setDoc(doc(db, "users", currentPlayer.uid), {
+            uid: currentPlayer.uid,
+            username: currentPlayer.username,
+            usernameLower: currentPlayer.username.toLowerCase(),
+            email: currentPlayer.email || "",
+            avatarIdx: currentPlayer.avatarIdx,
+            caught: currentPlayer.caught,
+            points: currentPlayer.points,
+            rp: currentPlayer.rp,
+            candy: currentPlayer.candy,
+            selectedBall: currentPlayer.selectedBall,
+            balls: currentPlayer.balls,
+            items: { pokeball: currentPlayer.balls.poke, potion: 5 },
+            partySlots: currentPlayer.partySlots,
+            inventory: currentPlayer.inventory,
+            gameData: {
+              highScore: currentPlayer.points,
+              rp: currentPlayer.rp,
+              candyCount: currentPlayer.candy,
+              ballBag: currentPlayer.balls,
+              partySlots: currentPlayer.partySlots,
+              inventory: currentPlayer.inventory
+            },
+            updatedAt: Date.now()
+          }, { merge: true });
+        } catch (err) {
+          console.error("Firebase sync error:", err);
+        }
+      }
+    }
+
+    async function loadOrCreateFirebaseProfile(firebaseUser, fallbackUsername = "") {
+      const uid = firebaseUser.uid;
+      const emailPrefix = (firebaseUser.email || "").split("@")[0].toUpperCase();
+      const resolvedName = (fallbackUsername || firebaseUser.displayName || emailPrefix || "TRAINER").toUpperCase();
+
+      if (db && isFirebaseConfigured) {
+        const userRef = doc(db, "users", uid);
+        const snap = await getDoc(userRef);
+        if (snap.exists()) {
+          currentPlayer = normalizePlayerData(snap.data(), uid, resolvedName, firebaseUser.email || "");
+        } else {
+          currentPlayer = createInitialProfile(uid, resolvedName, firebaseUser.email || "");
+          await setDoc(userRef, currentPlayer);
+        }
+      } else {
+        let localRaw = null;
+        try {
+          const saved = localStorage.getItem(`quiz_poke_local_profile_${uid}`);
+          if (saved) localRaw = JSON.parse(saved);
+        } catch (e) {}
+        currentPlayer = normalizePlayerData(localRaw, uid, resolvedName, firebaseUser.email || "");
+      }
+      renderProfile();
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      const el = document.getElementById(screenId);
+      if (el) el.classList.add("active");
+    }
+
+    function setRandomSplash() {
+      document.getElementById("splash-text").textContent =
+        SPLASH_GREETINGS[Math.floor(Math.random() * SPLASH_GREETINGS.length)];
+    }
+
+    /* =========================================================================
+       4. AUTH HANDLERS (FIREBASE + LOCAL FALLBACK IF UNCONFIGURED)
+       ========================================================================= */
+    function switchAuthTab(mode) {
+      audio.playSFX("click");
+      const isLogin = mode === "login";
+      document.getElementById("tab-auth-login").classList.toggle("active", isLogin);
+      document.getElementById("tab-auth-register").classList.toggle("active", !isLogin);
+      document.getElementById("form-login-box").style.display = isLogin ? "block" : "none";
+      document.getElementById("form-register-box").style.display = isLogin ? "none" : "block";
+    }
+
+    async function handleCreateAccount() {
+      const rawUser = document.getElementById("reg-username").value.trim().toUpperCase();
+      const rawEmail = document.getElementById("reg-email").value.trim().toLowerCase();
+      const pass = document.getElementById("reg-password").value;
+      const confirmPass = document.getElementById("reg-confirm").value;
+
+      if (rawUser.length < 3) { audio.playSFX("error"); return showToast("Username minimal 3 karakter!"); }
+      if (pass.length < 6) { audio.playSFX("error"); return showToast("Password minimal 6 karakter!"); }
+      if (pass !== confirmPass) { audio.playSFX("error"); return showToast("Konfirmasi password tidak cocok!"); }
+
+      if (!auth || !isFirebaseConfigured) {
+        const localUid = "LOCAL-" + rawUser.replace(/[^A-Z0-9]/g, "").slice(0, 10) + "-" + Math.floor(100 + Math.random() * 900);
+        currentPlayer = createInitialProfile(localUid, rawUser, rawEmail);
+        await savePlayerToFirebase();
+        audio.playSFX("success");
+        setRandomSplash();
+        showScreen("screen-lobby");
+        audio.switchBGM("main");
+        return showToast(`Mode Lokal aktif untuk ${currentPlayer.username}!`);
+      }
+
+      const btn = document.getElementById("btn-submit-register");
+      btn.disabled = true;
+      btn.textContent = "MEMBUAT AKUN...";
+      try {
+        const email = rawEmail && rawEmail.includes("@") ? rawEmail : toFirebaseEmail(rawUser);
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        await loadOrCreateFirebaseProfile(cred.user, rawUser);
+        document.getElementById("reg-username").value = "";
+        document.getElementById("reg-email").value = "";
+        document.getElementById("reg-password").value = "";
+        document.getElementById("reg-confirm").value = "";
+        audio.playSFX("success");
+        setRandomSplash();
+        showScreen("screen-lobby");
+        audio.switchBGM("main");
+        showToast(`Akun ${currentPlayer.username} dibuat!`);
+      } catch (err) {
+        audio.playSFX("error");
+        showToast("Gagal daftar: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "CREATE ACCOUNT & MASUK";
+      }
+    }
+
+    async function handleLoginWithPassword() {
+      const rawInput = document.getElementById("login-username").value.trim();
+      const upperUser = rawInput.toUpperCase();
+      const pass = document.getElementById("login-password").value;
+      if (!rawInput || !pass) { audio.playSFX("error"); return showToast("Isi Email/Username dan Password dulu!"); }
+
+      if (!auth || !isFirebaseConfigured) {
+        const localUid = "LOCAL-" + upperUser.replace(/[^A-Z0-9]/g, "").slice(0, 12);
+        await loadOrCreateFirebaseProfile({ uid: localUid, email: rawInput.includes("@") ? rawInput : toFirebaseEmail(upperUser) }, upperUser);
+        audio.playSFX("success");
+        setRandomSplash();
+        showScreen("screen-lobby");
+        audio.switchBGM("main");
+        return showToast(`Masuk mode lokal sebagai ${currentPlayer.username}!`);
+      }
+
+      const btn = document.getElementById("btn-submit-login");
+      btn.disabled = true;
+      btn.textContent = "MENGHUBUNGKAN...";
+      try {
+        const email = rawInput.includes("@") ? rawInput.toLowerCase() : toFirebaseEmail(upperUser);
+        const cred = await signInWithEmailAndPassword(auth, email, pass);
+        await loadOrCreateFirebaseProfile(cred.user, rawInput.includes("@") ? "" : upperUser);
+        document.getElementById("login-password").value = "";
+        audio.playSFX("success");
+        setRandomSplash();
+        showScreen("screen-lobby");
+        audio.switchBGM("main");
+        showToast(`Login sukses! Selamat datang ${currentPlayer.username}`);
+      } catch (err) {
+        audio.playSFX("error");
+        showToast("Gagal login: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "LOGIN MASUK LOBI";
+      }
+    }
+
+    async function handleLogout() {
+      audio.playSFX("click");
+      stopQuizTimers();
+      audio.stopCurrentBGM();
+      if (auth && isFirebaseConfigured) await signOut(auth).catch(() => {});
+      currentPlayer = null;
+      switchAuthTab("login");
+      showScreen("screen-login");
+      showToast("Berhasil logout.");
+    }
+
+    function openDeleteModal() {
+      if (!currentPlayer) return;
+      audio.playSFX("click");
+      document.getElementById("delete-modal-text").textContent =
+        `Yakin hapus akun ${currentPlayer.username} (ID: ${currentPlayer.uid}) secara permanen?`;
+      document.getElementById("delete-modal").classList.add("show");
+    }
+
+    function closeDeleteModal() {
+      document.getElementById("delete-modal").classList.remove("show");
+    }
+
+    async function confirmDeleteAccount() {
+      closeDeleteModal();
+      if (!currentPlayer) return;
+      const uid = currentPlayer.uid;
+      try {
+        localStorage.removeItem(`quiz_poke_local_profile_${uid}`);
+        if (db && isFirebaseConfigured) await deleteDoc(doc(db, "users", uid));
+        if (auth && auth.currentUser) await deleteUser(auth.currentUser);
+        currentPlayer = null;
+        audio.stopCurrentBGM();
+        switchAuthTab("register");
+        showScreen("screen-login");
+        showToast("Akun berhasil dihapus.");
+      } catch (err) {
+        audio.playSFX("error");
+        showToast("Gagal hapus akun: " + err.message);
+      }
+    }
+
+    if (auth && isFirebaseConfigured) {
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          await loadOrCreateFirebaseProfile(user);
+          setRandomSplash();
+          showScreen("screen-lobby");
+        } else {
+          currentPlayer = null;
+          showScreen("screen-login");
+        }
+      });
+    }
+
+    /* =========================================================================
+       5. QUIZ ENGINE + WILD POKEMON QTE CATCH (BETA MECHANICS)
+       ========================================================================= */
+    const TIME_LIMIT = 12;
+    const RANDOM_QTE_CHANCE = 0.34;
+    let shuffledQuestions = [];
+    let qIdx = 0;
+    let qScore = 0;
+    let qCombo = 0;
+    let qLives = 3;
+    let qTimeLeft = TIME_LIMIT;
+    let qLocked = false;
+    let qTimerInterval = null;
+
+    let currentWildPokemon = null;
+    let qteCursor = 0;
+    let qteDir = 1;
+    let qteSpeed = 1.5;
+    let qteLocked = false;
+    let qteAnimId = null;
+
+    function stopQuizTimers() {
+      clearInterval(qTimerInterval);
+      qTimerInterval = null;
+      cancelAnimationFrame(qteAnimId);
+      qteAnimId = null;
+    }
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function grantExpToParty(amount) {
+      if (!currentPlayer) return [];
+      const leveledUp = [];
+      currentPlayer.partySlots.forEach((p) => {
+        if (!p) return;
+        p.exp = (p.exp || 0) + amount;
+        while (p.exp >= expNeededForLevel(p.level)) {
+          p.exp -= expNeededForLevel(p.level);
+          p.level += 1;
+          leveledUp.push(`${p.name} Lv.${p.level}`);
+        }
+      });
+      return leveledUp;
+    }
+
+    function updateQuizHUD() {
+      if (!currentPlayer) return;
+      document.getElementById("hud-score").textContent = qScore.toLocaleString("id-ID");
+      document.getElementById("hud-combo").textContent = `${qCombo}x`;
+      document.getElementById("hud-lives").textContent = "❤️".repeat(Math.max(0, qLives)) || "💀";
+      document.getElementById("hud-candy").textContent = `🍬 ${currentPlayer.candy || 0}`;
+
+      const strip = document.getElementById("quiz-party-strip");
+      strip.innerHTML = "";
+      [0, 1, 2].forEach((i) => {
+        const slot = currentPlayer.partySlots[i];
+        const div = document.createElement("div");
+        div.className = "party-mini-slot";
+        if (slot) {
+          div.innerHTML = `<img src="${get3DPokemonImg(slot.dexId)}" alt="${slot.name}" /><div>${slot.name} Lv.${slot.level}</div>`;
+        } else {
+          div.innerHTML = `<div style="padding:10px 2px; color:#94a3b8;">Slot #${i + 1} Kosong</div>`;
+        }
+        strip.appendChild(div);
+      });
+    }
+
+    function openQuiz() {
+      if (!currentPlayer) return;
+      audio.playSFX("click");
+      audio.switchBGM("quiz");
+      shuffledQuestions = shuffleArray(QUESTIONS);
+      qIdx = 0;
+      qScore = 0;
+      qCombo = 0;
+      qLives = 3;
+      qLocked = false;
+      showScreen("screen-quiz");
+      loadNextQuizQuestion();
+    }
+
+    function loadNextQuizQuestion() {
+      stopQuizTimers();
+      qLocked = false;
+      qTimeLeft = TIME_LIMIT;
+      updateQuizHUD();
+
+      if (qIdx >= shuffledQuestions.length) {
+        shuffledQuestions = shuffleArray(QUESTIONS);
+        qIdx = 0;
+      }
+      const item = shuffledQuestions[qIdx];
+      document.getElementById("quiz-cat-tag").textContent = item.cat;
+      document.getElementById("quiz-prompt").textContent = item.q;
+      document.getElementById("quiz-feedback").textContent = "";
+
+      const img = document.getElementById("quiz-img");
+      if (item.cat === "Pokémon" && item.ans === 1) {
+        img.style.display = "block";
+        img.src = get3DPokemonImg(25);
+      } else {
+        img.style.display = "none";
+      }
+
+      const optsBox = document.getElementById("quiz-options");
+      optsBox.innerHTML = "";
+      const letters = ["A", "B", "C", "D"];
+      item.opts.forEach((optText, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "opt-btn";
+        btn.textContent = `${letters[idx]}. ${optText}`;
+        btn.addEventListener("click", () => handleQuizAnswer(idx, btn));
+        optsBox.appendChild(btn);
+      });
+
+      const startedAt = performance.now();
+      qTimerInterval = setInterval(() => {
+        const elapsed = (performance.now() - startedAt) / 1000;
+        qTimeLeft = Math.max(0, TIME_LIMIT - elapsed);
+        document.getElementById("quiz-timer-txt").textContent = `${qTimeLeft.toFixed(1)}s`;
+        document.getElementById("quiz-timer-fill").style.width = `${(qTimeLeft / TIME_LIMIT) * 100}%`;
+        if (qTimeLeft <= 0 && !qLocked) {
+          handleQuizAnswer(-1, null);
+        }
+      }, 80);
+    }
+
+    async function handleQuizAnswer(selectedIdx, btnEl) {
+      if (qLocked || !currentPlayer) return;
+      qLocked = true;
+      stopQuizTimers();
+      const item = shuffledQuestions[qIdx];
+      qIdx++;
+
+      document.querySelectorAll("#quiz-options .opt-btn").forEach((b, i) => {
+        b.disabled = true;
+        if (i === item.ans) b.classList.add("correct");
+      });
+
+      const fb = document.getElementById("quiz-feedback");
+      if (selectedIdx === item.ans) {
+        qCombo += 1;
+        audio.playSFX("success");
+        const mult = 1 + Math.floor(qCombo / 5) * 0.25;
+        const gained = Math.round((100 + Math.ceil(qTimeLeft * 10)) * mult);
+        qScore += gained;
+        currentPlayer.points = Math.max(currentPlayer.points || 0, qScore);
+        currentPlayer.rp = (currentPlayer.rp || 0) + 10;
+
+        const expGain = 22 + Math.ceil(qTimeLeft * 2);
+        const lvUps = grantExpToParty(expGain);
+
+        let extra = "";
+        if (qCombo > 0 && qCombo % 10 === 0) {
+          currentPlayer.candy = (currentPlayer.candy || 0) + 1;
+          extra += " • +1 🍬 CANDY!";
+        }
+        if (lvUps.length > 0) extra += ` • Level Up: ${lvUps.join(", ")}`;
+        fb.textContent = `✅ Benar! +${gained} Skor (+10 RP, +${expGain} EXP)${extra}`;
+        updateQuizHUD();
+        await savePlayerToFirebase();
+
+        const hasAnyBall = (currentPlayer.balls.poke + currentPlayer.balls.great + currentPlayer.balls.ultra + currentPlayer.balls.master) > 0;
+        if (hasAnyBall && Math.random() < RANDOM_QTE_CHANCE) {
+          setTimeout(() => triggerWildPokemonQTE(), 850);
+          return;
+        }
+        setTimeout(() => {
+          if (document.getElementById("screen-quiz").classList.contains("active")) loadNextQuizQuestion();
+        }, 1100);
+      } else {
+        qCombo = 0;
+        qLives -= 1;
+        audio.playSFX("error");
+        if (btnEl) btnEl.classList.add("wrong");
+        updateQuizHUD();
+
+        if (qLives <= 0) {
+          fb.textContent = `💀 Nyawa habis! Skor akhir ${qScore.toLocaleString("id-ID")} tersimpan ke Firebase.`;
+          await savePlayerToFirebase();
+          setTimeout(() => {
+            showScreen("screen-lobby");
+            audio.switchBGM("main");
+          }, 1600);
+        } else {
+          fb.textContent = selectedIdx === -1 ? `⏰ Waktu habis! Jawaban: ${item.opts[item.ans]}` : `❌ Salah! Jawaban benar: ${item.opts[item.ans]}`;
+          setTimeout(() => {
+            if (document.getElementById("screen-quiz").classList.contains("active")) loadNextQuizQuestion();
+          }, 1250);
+        }
+      }
+    }
+
+    function rollRandomPokemonByChance() {
+      const r = Math.random();
+      let acc = 0;
+      for (const p of POKEMON_POOL) {
+        acc += p.chance;
+        if (r <= acc) return p;
+      }
+      return POKEMON_POOL[0];
+    }
+
+    function applySelectedBallToQteZone() {
+      if (!currentWildPokemon || !currentPlayer) return;
+      const ballKey = currentPlayer.selectedBall || "poke";
+      const cfg = BALL_RARITY_MATRIX[ballKey]?.[currentWildPokemon.rarity] || BALL_RARITY_MATRIX.poke.Common;
+      const zoneEl = document.getElementById("qte-zone");
+      zoneEl.style.width = `${cfg.zoneWidth}%`;
+      qteSpeed = currentWildPokemon.baseSpeed * cfg.speedMult;
+      document.getElementById("qte-info").textContent =
+        `${BALL_DEFS[ballKey].icon} ${BALL_DEFS[ballKey].label} • ${cfg.difficultyLabel} • Catch Rate ${Math.round(cfg.catchRate * 100)}%`;
+    }
+
+    function renderQteBallSelector() {
+      if (!currentPlayer) return;
+      const row = document.getElementById("qte-ball-selector");
+      row.innerHTML = "";
+      Object.keys(BALL_DEFS).forEach((key) => {
+        const def = BALL_DEFS[key];
+        const qty = currentPlayer.balls[key] || 0;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "ball-choice-btn" + (currentPlayer.selectedBall === key ? " active" : "");
+        btn.disabled = qty <= 0;
+        btn.textContent = `${def.icon} ${qty}`;
+        btn.title = `${def.label} (${qty})`;
+        btn.addEventListener("click", () => {
+          if (qteLocked || qty <= 0) return;
+          currentPlayer.selectedBall = key;
+          renderQteBallSelector();
+          applySelectedBallToQteZone();
+        });
+        row.appendChild(btn);
+      });
+    }
+
+    function triggerWildPokemonQTE() {
+      stopQuizTimers();
+      qteLocked = false;
+      currentWildPokemon = rollRandomPokemonByChance();
+
+      if ((currentPlayer.balls[currentPlayer.selectedBall] || 0) <= 0) {
+        const avail = ["poke", "great", "ultra", "master"].find(k => (currentPlayer.balls[k] || 0) > 0);
+        if (avail) currentPlayer.selectedBall = avail;
+      }
+
+      const isLeg = currentWildPokemon.rarity === "Legendary";
+      document.getElementById("qte-box").classList.toggle("legendary-mode", isLeg);
+      document.getElementById("qte-banner").textContent = isLeg
+        ? "👑 LEGENDARY ALERT! POKÉMON LANGKA MUNCUL! 👑"
+        : "⚡ QUICK EVENT ACAK! POKÉMON LIAR MUNCUL! ⚡";
+      document.getElementById("qte-rarity").textContent = `${currentWildPokemon.rarity} Pokémon`;
+      document.getElementById("qte-rarity").style.color = currentWildPokemon.color;
+      document.getElementById("qte-sprite").src = get3DPokemonImg(currentWildPokemon.dexId);
+      document.getElementById("qte-name").textContent = currentWildPokemon.name;
+      document.getElementById("qte-status").textContent = "";
+      document.getElementById("btn-qte-throw").disabled = false;
+
+      renderQteBallSelector();
+      applySelectedBallToQteZone();
+
+      qteCursor = 0;
+      qteDir = 1;
+      document.getElementById("qte-overlay").classList.add("show");
+
+      cancelAnimationFrame(qteAnimId);
+      const stepQte = () => {
+        if (!qteLocked) {
+          qteCursor += qteSpeed * qteDir;
+          if (qteCursor >= 100) { qteCursor = 100; qteDir = -1; }
+          else if (qteCursor <= 0) { qteCursor = 0; qteDir = 1; }
+          document.getElementById("qte-cursor").style.left = `${qteCursor}%`;
+        }
+        qteAnimId = requestAnimationFrame(stepQte);
+      };
+      qteAnimId = requestAnimationFrame(stepQte);
+    }
+
+    async function handleThrowQteBall() {
+      if (qteLocked || !currentWildPokemon || !currentPlayer) return;
+      qteLocked = true;
+      cancelAnimationFrame(qteAnimId);
+      document.getElementById("btn-qte-throw").disabled = true;
+
+      const ballKey = currentPlayer.selectedBall || "poke";
+      if ((currentPlayer.balls[ballKey] || 0) <= 0) {
+        document.getElementById("qte-status").textContent = "Bola habis!";
+        setTimeout(closeQteAndResumeQuiz, 900);
+        return;
+      }
+
+      currentPlayer.balls[ballKey] -= 1;
+      const cfg = BALL_RARITY_MATRIX[ballKey]?.[currentWildPokemon.rarity] || BALL_RARITY_MATRIX.poke.Common;
+      const halfZone = cfg.zoneWidth / 2;
+      const inZone = Math.abs(qteCursor - 50) <= halfZone;
+      const success = BALL_DEFS[ballKey].autoCatch || (inZone && Math.random() <= cfg.catchRate);
+
+      if (success) {
+        audio.playSFX("success");
+        if (!currentPlayer.caught.includes(currentWildPokemon.dexId)) {
+          currentPlayer.caught.push(currentWildPokemon.dexId);
+        }
+        const newInst = {
+          uid: `${currentWildPokemon.id}-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+          dexId: currentWildPokemon.dexId,
+          name: currentWildPokemon.name,
+          rarity: currentWildPokemon.rarity,
+          level: 1,
+          exp: 0
+        };
+        const freeSlot = currentPlayer.partySlots.findIndex(s => s === null);
+        let destMsg = "";
+        if (freeSlot !== -1) {
+          currentPlayer.partySlots[freeSlot] = newInst;
+          destMsg = `Masuk Slot Tim #${freeSlot + 1}!`;
+        } else if (currentPlayer.inventory.length < 15) {
+          currentPlayer.inventory.push(newInst);
+          destMsg = "Masuk Inventory!";
+        } else {
+          destMsg = "Masuk Pokédex!";
+        }
+        currentPlayer.rp = (currentPlayer.rp || 0) + (currentWildPokemon.rarity === "Legendary" ? 45 : 15);
+        document.getElementById("qte-status").textContent = `🎉 Tertangkap! ${currentWildPokemon.name} ${destMsg}`;
+        await savePlayerToFirebase();
+      } else {
+        audio.playSFX("error");
+        document.getElementById("qte-status").textContent = inZone
+          ? `💨 ${currentWildPokemon.name} lolos dari bola!`
+          : `🎯 Kursor di luar zona hijau! ${currentWildPokemon.name} kabur!`;
+        await savePlayerToFirebase();
+      }
+
+      setTimeout(closeQteAndResumeQuiz, 1250);
+    }
+
+    function closeQteAndResumeQuiz() {
+      cancelAnimationFrame(qteAnimId);
+      currentWildPokemon = null;
+      document.getElementById("qte-overlay").classList.remove("show");
+      if (document.getElementById("screen-quiz").classList.contains("active")) {
+        loadNextQuizQuestion();
+      }
+    }
+
+    /* =========================================================================
+       6. INVENTORY, CANDY LEVEL-UP, EVOLUTION & PARTY SLOTS (BETA MECHANICS)
+       ========================================================================= */
+    function getActiveLeadPokemon() {
+      if (!currentPlayer) return makeStarterPoke(25, 1);
+      const found = currentPlayer.partySlots.find(p => p !== null);
+      if (found) return found;
+      const fallbackDex = currentPlayer.caught[0] || 25;
+      return makeStarterPoke(fallbackDex, 1);
+    }
+
+    function openInventory() {
+      if (!currentPlayer) return;
+      audio.playSFX("click");
+      audio.switchBGM("main");
+      renderInventoryScreen();
+      showScreen("screen-inventory");
+    }
+
+    function renderInventoryScreen() {
+      if (!currentPlayer) return;
+      document.getElementById("inv-ball-poke").textContent = `x${currentPlayer.balls?.poke ?? 0}`;
+      document.getElementById("inv-ball-great").textContent = `x${currentPlayer.balls?.great ?? 0}`;
+      document.getElementById("inv-ball-ultra").textContent = `x${currentPlayer.balls?.ultra ?? 0}`;
+      document.getElementById("inv-ball-master").textContent = `x${currentPlayer.balls?.master ?? 0}`;
+      document.getElementById("inv-candy-txt").textContent = `🍬 Candy: ${currentPlayer.candy || 0}`;
+      document.getElementById("inv-points-txt").textContent = `⭐ ${currentPlayer.points || 0} pts`;
+      document.getElementById("inv-rp-txt").textContent = `🏅 ${currentPlayer.rp || 0} RP`;
+      document.getElementById("inv-caught-count").textContent = currentPlayer.caught.length;
+
+      const slotsEl = document.getElementById("party-slots-container");
+      slotsEl.innerHTML = "";
+      [0, 1, 2].forEach((idx) => {
+        const poke = currentPlayer.partySlots[idx];
+        const card = document.createElement("div");
+        card.className = "team-slot-card";
+        if (!poke) {
+          card.innerHTML = `<div style="color:#64748b; padding:16px 4px;">Slot #${idx + 1}<br>Kosong</div>`;
+        } else {
+          const evo = EVO_CHAIN[poke.dexId];
+          const canEvo = evo && poke.level >= evo.minLv && (currentPlayer.candy || 0) >= evo.candyCost;
+          card.innerHTML = `
+            <div>Slot #${idx + 1}</div>
+            <img src="${get3DPokemonImg(poke.dexId)}" alt="${poke.name}" />
+            <div>${poke.name} Lv.${poke.level}</div>
+            <button type="button" class="btn-tiny-act" data-candy-slot="${idx}">🍬 +1 Lv (1)</button>
+            ${evo ? `<button type="button" class="btn-tiny-act" style="background:${canEvo ? '#86efac' : '#e2e8f0'};" data-evo-slot="${idx}">✨ Evo → ${evo.toName} (Lv.${evo.minLv}, ${evo.candyCost}🍬)</button>` : ""}
+          `;
+        }
+        slotsEl.appendChild(card);
+      });
+
+      slotsEl.querySelectorAll("[data-candy-slot]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const idx = Number(btn.getAttribute("data-candy-slot"));
+          const poke = currentPlayer.partySlots[idx];
+          if (!poke) return;
+          if ((currentPlayer.candy || 0) < 1) {
+            audio.playSFX("error");
+            return showToast("Candy habis! Capai 10x combo di Quiz untuk dapat Candy.");
+          }
+          currentPlayer.candy -= 1;
+          poke.level += 1;
+          audio.playSFX("success");
+          showToast(`${poke.name} naik ke Lv.${poke.level}!`);
+          await savePlayerToFirebase();
+          renderInventoryScreen();
+        });
+      });
+
+      slotsEl.querySelectorAll("[data-evo-slot]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const idx = Number(btn.getAttribute("data-evo-slot"));
+          const poke = currentPlayer.partySlots[idx];
+          if (!poke) return;
+          const evo = EVO_CHAIN[poke.dexId];
+          if (!evo) return;
+          if (poke.level < evo.minLv) {
+            audio.playSFX("error");
+            return showToast(`Butuh minimal Lv.${evo.minLv} untuk berevolusi!`);
+          }
+          if ((currentPlayer.candy || 0) < evo.candyCost) {
+            audio.playSFX("error");
+            return showToast(`Butuh ${evo.candyCost} Candy untuk berevolusi!`);
+          }
+          currentPlayer.candy -= evo.candyCost;
+          const oldName = poke.name;
+          poke.dexId = evo.toDex;
+          poke.name = evo.toName;
+          if (!currentPlayer.caught.includes(evo.toDex)) currentPlayer.caught.push(evo.toDex);
+          audio.playSFX("success");
+          showToast(`✨ ${oldName} berevolusi menjadi ${evo.toName}!`);
+          await savePlayerToFirebase();
+          renderInventoryScreen();
+        });
+      });
+
+      const invGrid = document.getElementById("inventory-grid");
+      invGrid.innerHTML = "";
+      currentPlayer.caught.forEach((pokeId) => {
+        const name = POKEMON_NAMES_110[pokeId - 1] || `#${pokeId}`;
+        const card = document.createElement("div");
+        card.className = "dex-card";
+        card.innerHTML = `
+          <div class="dex-num">#${String(pokeId).padStart(3, "0")}</div>
+          <img src="${get3DPokemonImg(pokeId)}" alt="${name}" loading="lazy" />
+          <div class="dex-name">${name}</div>
+          <button type="button" class="btn-tiny-act" data-set-lead="${pokeId}">Jadikan Partner</button>
+        `;
+        invGrid.appendChild(card);
+      });
+
+      invGrid.querySelectorAll("[data-set-lead]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const dexId = Number(btn.getAttribute("data-set-lead"));
+          currentPlayer.partySlots[0] = makeStarterPoke(dexId, currentPlayer.partySlots[0]?.level || 1);
+          audio.playSFX("click");
+          showToast(`${POKEMON_NAMES_110[dexId - 1]} dipasang di Slot Tim #1!`);
+          await savePlayerToFirebase();
+          renderInventoryScreen();
+        });
+      });
+    }
+
+    /* =========================================================================
+       7. PVP ARENA TURN-BASED (BETA MOVESET & LEVEL SCALING)
+       ========================================================================= */
+    let p1Hp = 100, p1MaxHp = 100;
+    let p2Hp = 100, p2MaxHp = 100;
+    let pvpLead = null;
+    let pvpRival = null;
+    let pvpBusy = false;
+
+    function calcMaxHp(level) {
+      return 90 + Math.max(1, Number(level || 1)) * 14;
+    }
+
+    function openPvpLobby() {
+      if (!currentPlayer) return;
+      audio.playSFX("click");
+      audio.switchBGM("main");
+      const rank = getRankInfo(currentPlayer.rp || 0);
+      pvpLead = getActiveLeadPokemon();
+      document.getElementById("pvp-rank-label").textContent = `${rank.icon} ${rank.name} (${currentPlayer.rp || 0} RP)`;
+      document.getElementById("pvp-my-sprite").src = get3DPokemonImg(pvpLead.dexId);
+      document.getElementById("pvp-my-name").textContent = `${pvpLead.name} Lv.${pvpLead.level}`;
+      showScreen("screen-pvp-lobby");
+    }
+
+    function computeMoveDamage(attacker, move) {
+      if (Math.random() * 100 > move.acc) return 0;
+      const safeLv = Math.max(1, Math.min(50, Number(attacker.level || 1)));
+      const lvFactor = 1 + (safeLv - 1) * 0.08;
+      const jitter = 0.88 + Math.random() * 0.24;
+      return Math.max(10, Math.round(move.power * lvFactor * jitter));
+    }
+
+    function startPvpBattle() {
+      if (!currentPlayer) return;
+      audio.playSFX("click");
+      audio.switchBGM("battle");
+      pvpBusy = false;
+      pvpLead = getActiveLeadPokemon();
+      const rivalDex = Math.floor(Math.random() * 110) + 1;
+      const rivalLv = Math.max(1, (pvpLead.level || 1) + Math.floor(Math.random() * 3) - 1);
+      pvpRival = { dexId: rivalDex, name: POKEMON_NAMES_110[rivalDex - 1] || `Rival #${rivalDex}`, level: rivalLv };
+
+      p1MaxHp = calcMaxHp(pvpLead.level);
+      p2MaxHp = calcMaxHp(pvpRival.level);
+      p1Hp = p1MaxHp;
+      p2Hp = p2MaxHp;
+
+      document.getElementById("bat-p1-name").textContent = `${pvpLead.name} Lv.${pvpLead.level}`;
+      document.getElementById("bat-p1-img").src = get3DPokemonImg(pvpLead.dexId);
+      document.getElementById("bat-p1-hp").style.width = "100%";
+
+      document.getElementById("bat-p2-name").textContent = `${pvpRival.name} Lv.${pvpRival.level}`;
+      document.getElementById("bat-p2-img").src = get3DPokemonImg(pvpRival.dexId);
+      document.getElementById("bat-p2-hp").style.width = "100%";
+
+      document.getElementById("battle-log").textContent = `Giliranmu! Pilih jurus ${pvpLead.name}.`;
+
+      const movesGrid = document.getElementById("pvp-moves-grid");
+      movesGrid.innerHTML = "";
+      POKEMON_MOVESET.forEach((mv) => {
+        const unlocked = (pvpLead.level || 1) >= mv.unlockLv;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "opt-btn";
+        btn.disabled = !unlocked;
+        btn.innerHTML = unlocked
+          ? `${mv.name}<br><small style="color:#475569;">Pwr ${mv.power} • Acc ${mv.acc}%</small>`
+          : `🔒 ${mv.name}<br><small style="color:#94a3b8;">Unlock Lv.${mv.unlockLv}</small>`;
+        btn.addEventListener("click", () => handlePvpMove(mv));
+        movesGrid.appendChild(btn);
+      });
+
+      showScreen("screen-pvp-battle");
+    }
+
+    async function handlePvpMove(move) {
+      if (pvpBusy || p1Hp <= 0 || p2Hp <= 0 || !currentPlayer) return;
+      pvpBusy = true;
+      document.querySelectorAll("#pvp-moves-grid .opt-btn").forEach(b => b.disabled = true);
+
+      const dmg = computeMoveDamage(pvpLead, move);
+      if (dmg <= 0) {
+        audio.playSFX("error");
+        document.getElementById("battle-log").textContent = `${pvpLead.name} memakai ${move.name}, tapi meleset!`;
+      } else {
+        audio.playSFX("hit");
+        p2Hp = Math.max(0, p2Hp - dmg);
+        document.getElementById("bat-p2-hp").style.width = `${(p2Hp / p2MaxHp) * 100}%`;
+        document.getElementById("battle-log").textContent = `${pvpLead.name} pakai ${move.name}! (-${dmg} HP)`;
+      }
+
+      if (p2Hp <= 0) {
+        audio.playSFX("success");
+        currentPlayer.points = (currentPlayer.points || 0) + 45;
+        currentPlayer.rp = (currentPlayer.rp || 0) + 30;
+        currentPlayer.balls.poke = (currentPlayer.balls.poke || 0) + 1;
+        await savePlayerToFirebase();
+        document.getElementById("battle-log").textContent = `🏆 Menang! +45 Poin, +30 RP & +1 Poké Ball tersimpan!`;
+        setTimeout(() => { pvpBusy = false; openPvpLobby(); }, 1650);
+        return;
+      }
+
+      setTimeout(async () => {
+        if (p2Hp <= 0) return;
+        const enemyMove = POKEMON_MOVESET[Math.min(1, Math.floor(Math.random() * 2))];
+        const eDmg = computeMoveDamage(pvpRival, enemyMove);
+        if (eDmg <= 0) {
+          document.getElementById("battle-log").textContent = `${pvpRival.name} memakai ${enemyMove.name}, tapi meleset!`;
+        } else {
+          audio.playSFX("hit");
+          p1Hp = Math.max(0, p1Hp - eDmg);
+          document.getElementById("bat-p1-hp").style.width = `${(p1Hp / p1MaxHp) * 100}%`;
+          document.getElementById("battle-log").textContent = `${pvpRival.name} membalas dengan ${enemyMove.name}! (-${eDmg} HP)`;
+        }
+
+        if (p1Hp <= 0) {
+          audio.playSFX("error");
+          currentPlayer.rp = Math.max(0, (currentPlayer.rp || 0) - 10);
+          await savePlayerToFirebase();
+          document.getElementById("battle-log").textContent = `💀 ${pvpLead.name} kalah (-10 RP).`;
+          setTimeout(() => { pvpBusy = false; openPvpLobby(); }, 1650);
+          return;
+        }
+
+        pvpBusy = false;
+        document.querySelectorAll("#pvp-moves-grid .opt-btn").forEach((b, idx) => {
+          b.disabled = (pvpLead.level || 1) < POKEMON_MOVESET[idx].unlockLv;
+        });
+      }, 800);
+    }
+
+    /* =========================================================================
+       8. POKEDEX, LEADERBOARD & FUSE
+       ========================================================================= */
+    function openPokedex() {
+      if (!currentPlayer) return;
+      audio.playSFX("click");
+      audio.switchBGM("main");
+      renderPokedexGrid(currentFilterMode);
+      showScreen("screen-pokedex");
+    }
+
+    function renderPokedexGrid(mode) {
+      if (!currentPlayer) return;
+      currentFilterMode = mode;
+      const grid = document.getElementById("pokedex-grid");
+      grid.innerHTML = "";
+      document.getElementById("dex-title").textContent = `📖 Pokédex (${currentPlayer.caught.length}/110)`;
+      document.getElementById("tab-dex-all").classList.toggle("active", mode === "all");
+      document.getElementById("tab-dex-caught").classList.toggle("active", mode === "caught");
+
+      const ids = [];
+      for (let i = 1; i <= 110; i++) {
+        if (mode === "all" || currentPlayer.caught.includes(i)) ids.push(i);
+      }
+
+      if (ids.length === 0) {
+        grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;font-size:0.84rem;padding:16px;">Belum ada Pokémon tertangkap.</p>';
+        return;
+      }
+
+      ids.forEach((id) => {
+        const name = POKEMON_NAMES_110[id - 1] || `#${id}`;
+        const unlocked = currentPlayer.caught.includes(id);
+        const card = document.createElement("div");
+        card.className = "dex-card" + (unlocked ? "" : " locked");
+        card.innerHTML = `
+          <div class="dex-num">#${String(id).padStart(3, "0")}</div>
+          <img src="${get3DPokemonImg(id)}" alt="${name}" loading="lazy" />
+          <div class="dex-name">${unlocked ? name : "???"}</div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    async function openLeaderboard() {
+      if (!currentPlayer) return;
+      audio.playSFX("click");
+      audio.switchBGM("main");
+      const lbList = document.getElementById("leaderboard-list");
+      lbList.innerHTML = '<p style="text-align:center;font-size:0.82rem;padding:12px;">Memuat peringkat...</p>';
+      showScreen("screen-leaderboard");
+
+      let entries = [];
+      if (db && isFirebaseConfigured) {
+        try {
+          const snap = await getDocs(query(collection(db, "users"), limit(40)));
+          snap.forEach((docSnap) => {
+            const d = docSnap.data() || {};
+            const uname = String(d.username || "TRAINER").toUpperCase();
+            if (String(d.role || "").toLowerCase() === "admin" || uname.startsWith("ADMIN")) return;
+            entries.push({
+              uid: d.uid || docSnap.id,
+              name: uname,
+              rp: Number(d.rp || d.gameData?.rp || 0),
+              points: Math.max(Number(d.points || 0), Number(d.gameData?.highScore || 0)),
+              dexCount: Array.isArray(d.caught) ? d.caught.length : 0,
+              isMe: (d.uid || docSnap.id) === currentPlayer.uid
+            });
+          });
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      if (!entries.some(e => e.uid === currentPlayer.uid)) {
+        entries.push({
+          uid: currentPlayer.uid,
+          name: currentPlayer.username,
+          rp: currentPlayer.rp || 0,
+          points: currentPlayer.points || 0,
+          dexCount: currentPlayer.caught.length,
+          isMe: true
+        });
+      }
+
+      entries.sort((a, b) => b.rp - a.rp || b.points - a.points);
+      lbList.innerHTML = "";
+      entries.slice(0, 15).forEach((entry, idx) => {
+        const rank = getRankInfo(entry.rp);
+        const row = document.createElement("div");
+        row.className = "lb-row" + (entry.isMe ? " me" : "");
+        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
+        row.innerHTML = `
+          <div>
+            <span class="lb-rank">${medal}</span>
+            <strong>${entry.name}</strong>
+            <small style="display:block; color:#64748b; font-size:0.68rem;">${rank.icon} ${rank.name} • Dex ${entry.dexCount}/110</small>
+          </div>
+          <div class="lb-pts">${entry.rp} RP • ${Number(entry.points).toLocaleString("id-ID")} pts</div>
+        `;
+        lbList.appendChild(row);
+      });
+    }
+
+    function openFuseLobby() {
+      audio.playSFX("click");
+      audio.switchBGM("main");
+      showScreen("screen-fuse");
+    }
+
+    /* =========================================================================
+       9. EVENT LISTENERS
+       ========================================================================= */
+    document.querySelectorAll("[data-auth-tab]").forEach(el => {
+      el.addEventListener("click", () => switchAuthTab(el.getAttribute("data-auth-tab")));
+    });
+    document.getElementById("btn-submit-login").addEventListener("click", handleLoginWithPassword);
+    document.getElementById("btn-submit-register").addEventListener("click", handleCreateAccount);
+
+    document.getElementById("splash-banner").addEventListener("click", () => {
+      audio.playSFX("click");
+      setRandomSplash();
+    });
+
+    document.getElementById("btn-logout").addEventListener("click", handleLogout);
+    document.getElementById("btn-delete-account").addEventListener("click", openDeleteModal);
+    document.getElementById("btn-cancel-delete").addEventListener("click", closeDeleteModal);
+    document.getElementById("btn-confirm-delete").addEventListener("click", confirmDeleteAccount);
+
+    document.getElementById("avatar-circle").addEventListener("click", async () => {
+      if (!currentPlayer) return;
+      audio.playSFX("click");
+      currentPlayer.avatarIdx = ((currentPlayer.avatarIdx || 0) + 1) % AVATAR_IDS.length;
+      await savePlayerToFirebase();
+      showToast("Avatar 3D diganti & disimpan!");
+    });
+
+    document.getElementById("user-badge").addEventListener("click", () => {
+      if (!currentPlayer?.uid) return;
+      navigator.clipboard?.writeText(currentPlayer.uid).catch(() => {});
+      showToast("ID dicopy: " + currentPlayer.uid);
+    });
+
+    document.getElementById("btn-sound-toggle").addEventListener("click", () => {
+      const muted = audio.toggleMute();
+      const btn = document.getElementById("btn-sound-toggle");
+      btn.textContent = muted ? "🔇" : "🔊";
+      btn.classList.toggle("muted", muted);
+      if (!muted) audio.playSFX("click");
+    });
+
+    document.getElementById("btn-leaderboard").addEventListener("click", openLeaderboard);
+    document.getElementById("btn-menu-quiz").addEventListener("click", openQuiz);
+    document.getElementById("btn-menu-pvp").addEventListener("click", openPvpLobby);
+    document.getElementById("btn-menu-pokedex").addEventListener("click", openPokedex);
+    document.getElementById("btn-menu-inventory").addEventListener("click", openInventory);
+    document.getElementById("btn-menu-fuse").addEventListener("click", openFuseLobby);
+
+    document.querySelectorAll("[data-back-lobby]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        stopQuizTimers();
+        audio.playSFX("click");
+        showScreen("screen-lobby");
+        audio.switchBGM("main");
+      });
+    });
+
+    document.getElementById("tab-dex-all").addEventListener("click", () => renderPokedexGrid("all"));
+    document.getElementById("tab-dex-caught").addEventListener("click", () => renderPokedexGrid("caught"));
+
+    document.getElementById("btn-qte-throw").addEventListener("click", handleThrowQteBall);
+    document.getElementById("btn-start-pvp").addEventListener("click", startPvpBattle);
+
+    const cfgArea = document.getElementById("fb-config-textarea");
+    if (cfgArea && isFirebaseConfigured) cfgArea.value = JSON.stringify(firebaseConfig, null, 2);
+
+    document.getElementById("btn-save-fb-config")?.addEventListener("click", () => {
+      try {
+        const parsed = JSON.parse(document.getElementById("fb-config-textarea").value.trim());
+        if (!parsed.apiKey || !parsed.projectId) throw new Error("Wajib ada apiKey dan projectId");
+        if (!parsed.databaseURL) parsed.databaseURL = `https://${parsed.projectId}-default-rtdb.firebaseio.com`;
+        localStorage.setItem("quiz_poke_custom_fb_config", JSON.stringify(parsed));
+        audio.playSFX("success");
+        showToast("✅ Config Firebase tersimpan! Memuat ulang...");
+        setTimeout(() => location.reload(), 650);
+      } catch (err) {
+        audio.playSFX("error");
+        showToast("❌ JSON tidak valid: " + err.message);
+      }
+    });
+
+    setRandomSplash();
+  </script>
+</body>
+</html>
